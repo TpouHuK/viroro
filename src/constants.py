@@ -18,7 +18,7 @@ def p_to_m(x):
 # Gui config
 WINDOW_TITLE = "🔥 hot garbage"
 
-TILE_SIZE = 110
+TILE_SIZE = 110 # How many pixels in one pymunk unit (meter)
 FIELD_SIZE = Vec2d(8, 6) # Field size in squares
 FIELD_SIZE_PIXELS = m_to_p(Vec2d(FIELD_SIZE.x, FIELD_SIZE.y))
 
