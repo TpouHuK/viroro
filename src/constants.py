@@ -1,7 +1,6 @@
 from pymunk.vec2d import Vec2d
 def m_to_pd(x):
-    ''' Pymunk coordinates to screen coordinates [meters to pixels]
-        for displaying on canvas'''
+    """Pymunk coordinates to screen coordinates."""
     OFFSET = Vec2d(int(m_to_p(0.1)), int(m_to_p(0.1)))
     return m_to_p(x)+OFFSET
 
@@ -9,19 +8,17 @@ def pd_to_m(x):
     raise NotImplemented
 
 def m_to_p(x):
-    ''' Pymunk values to screen values [meters to pixels] '''
+    """Translate pymunk values to pixels."""
     return x*TILE_SIZE
 
 def p_to_m(x):
-    ''' Screen values to pymunk values [pixels to meters] '''
+    """Translate pixels to pymunk values."""
     return x/TILE_SIZE
 
 # Gui config
 WINDOW_TITLE = "🔥 hot garbage"
-#TILE_SIZE = 60
 TILE_SIZE = 110
 
-#FIELD_SIZE = Vec2d(15, 10) # Field size in squares
 FIELD_SIZE = Vec2d(8, 6) # Field size in squares
 FIELD_SIZE_PIXELS = m_to_p(Vec2d(FIELD_SIZE.x, FIELD_SIZE.y))
 

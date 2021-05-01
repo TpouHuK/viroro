@@ -8,15 +8,15 @@ import constants as cs
 
 class PGObject():
     def _upd(self):
-        ''' This function is called every simulation tick '''
+        """Called every simulation tick."""
         pass
 
     def _show(self, canvas):
-        ''' Draws object on a tkinter canvas '''
+        """Draw object on a tkinter canvas."""
         pass
 
     def _cls(self, canvas):
-        ''' Removes object from a tkinter canvas '''
+        """Remove object from a tkinter canvas."""
         for line in self.on_screen:
             canvas.delete(line)
         self.on_screen = []
@@ -24,7 +24,7 @@ class PGObject():
 
 class Car(PGObject):
     def __init__(self, props, position):
-        ''' Creates a car with properties as in [props] at [position] '''
+        """Car with properties as in props."""
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
@@ -63,7 +63,7 @@ class Car(PGObject):
         self._to_space.extend((self.body, self.shape))
 
         def glue(b1, b2):
-            ''' Binds two bodies together '''
+            """Bind two bodies together."""
             c1 = pymunk.constraints.PinJoint(
                 b1, b2, (0, 0), b1.position - position)
             c2 = pymunk.constraints.GearJoint(b1, b2, 0, 1)
@@ -79,18 +79,22 @@ class Car(PGObject):
         self.rw_gearjoint = glue(t_w_r.body, self.body)
 
     def turn(self, deg):
-        ''' Sets angle of front wheels in degrees 
-            (positive -> clockwise, negative -> counterclockwise) '''
+        """Set angle of front wheels in degrees.
+
+        deg -- degrees (positive -> clockwise, negative -> counterclockwise)
+        """
         angle = radians(deg)
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
 
-    def push(self, x):
-        ''' Set's force with which car is pushed forward in Newtons'''
-        self.motor_power = x
+    def push(self, force):
+        """Set force with which car is pushed forward.
+
+        force -- newtons (F=ma)
+        """
+        self.motor_power = force
 
     def _upd(self):
-        # applying force each tick
         force = self.motor_power
         self.body.apply_force_at_local_point((0, force), (0, -self.height/2))
 
@@ -146,16 +150,16 @@ class Wheel(PGObject):
         def wheel_physics(body, gravity, damping, dt):
             local_velocity = body.velocity.rotated(-body.angle)
             
-            sf_imp = copysign(
+            horz_imp = copysign(
                 min(self.slip_force*dt, abs(local_velocity.x*m)),
                 -local_velocity.x)
-            rf_imp = copysign(
+            vert_imp = copysign(
                 min(
                     self.friction_force*dt,
                     abs(local_velocity.y)*m*weird_forward_friction),
                 -local_velocity.y)
 
-            body.apply_impulse_at_local_point((sf_imp, rf_imp))
+            body.apply_impulse_at_local_point((horz_imp, vert_imp))
             pymunk.Body.update_velocity(body, gravity, damping, dt)
 
         self.body.velocity_func = wheel_physics

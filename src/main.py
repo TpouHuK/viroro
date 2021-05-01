@@ -28,7 +28,7 @@ car_props = {
     "wheel_slipforce": 60,
     "wheel_friction_force": 30,
     "wheel_side_friction": 0.5,
-    "wheel_weird_forward_friction": 0.1,
+    "wheel_weird_forward_friction": 0.01,
 
     "tw": 0.10,
     "th": 0.20,
@@ -42,13 +42,13 @@ car_props = {
     }
 
 car = ph.Car(car_props, position=(0.5, 0.5))
-circle = ph.Circle(position=(0.5, 3.5), mass=0.1,
+circle = ph.Circle(position=(0.5, 3.5), mass=1.1,
         radius=0.15, elasticity=0.999)
 walls = ph.Walls(field.walls, cs.WALL_THICKNESS, cs.WALL_ELASTICITY)
 
 p_field.add(car, circle, walls)
 to_show = [car, circle, walls]
-circle.bump((0.3, 1))
+circle.bump((0.3*20, 1*20))
 
 def millis():
     return int(time.time()*1000)
