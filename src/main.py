@@ -1,9 +1,8 @@
-import PySimpleGUI as sg
-from collections import namedtuple
 import time
-
+from collections import namedtuple
+import PySimpleGUI as sg
 import field
-import physics
+import physics as ph
 import constants as cs
 
 sg.theme("Reddit")
@@ -18,22 +17,33 @@ layout = [[sg.Button("Set angle", key="-SA-"), sg.Slider(range=(-45, 45), defaul
                 enable_events=False,
                 drag_submits=False)]]
 
-window = sg.Window("🔥 hot garbage", layout, return_keyboard_events=True, finalize=True)
+window = sg.Window(cs.WINDOW_TITLE, layout, finalize=True)
 canvas = window["-GRAPH-"].TKCanvas
 
-fd = physics.PhysicalField()
+p_field = ph.PymunkField()
+car_props = {
+        "wheel_radius": 0.035,
+        "wheel_width": 0.025,
+        "wheel_mass": 0.01,
+        "tw": 0.10,
+        "th": 0.20,
+        "bw": 0.10,
+        "bh": 0.20,
+        
+        "car_width": 0.25,
+        "car_height": 0.30,
+        "car_mass": 1.4,
+        "hull_friction": 0.1,
+        }
 
-for wall in fd.get_walls_to_draw():
-    tl, br = wall
-    canvas.create_line(*tl, *br, fill="black", width=3)
+car = ph.Car(car_props, position=(0.5, 0.5))
+circle = ph.Circle(position=(0.5, 3.5), mass=0.1,
+        radius=0.15, elasticity=0.999)
+walls = ph.Walls(field.walls, cs.WALL_THICKNESS, cs.WALL_ELASTICITY)
 
-def draw_testing_circle():
-    pos, rad = fd.get_circle_to_draw()
-    return canvas.create_oval(pos.x - rad, pos.y - rad,
-            pos.x + rad, pos.y + rad, fill="green", width=2)
-
-
-testing_circle = draw_testing_circle()
+p_field.add(car, circle, walls)
+to_show = [car, circle, walls]
+circle.bump((0.3, 1))
 
 def millis():
     return int(time.time()*1000)
@@ -60,25 +70,24 @@ while True:
         window["-PAUSE-"].update("Pause" if running else "Run")
 
     if event == "-STEP-":
-            fd.step()
-
+            p_field.step()
 
     if millis() - last_computation >= cs.UPS_TICK:
         last_computation = millis()
         if running:
             ang = values["-ANGLE-"]
-            fd.car.turn(-ang)
-            fd.car.push(-values["-FORCE-"]/500)
-            fd.step()
+            car.turn(-ang)
+            car.push(-values["-FORCE-"]/1.5)
+            p_field.step()
+
         comp_time = millis() - last_computation
 
     if millis() - last_redraw >= cs.FPS_TICK:
-        for item in fd.to_show:
-            item.show(canvas)
-            
         last_redraw = millis()
-        canvas.delete(testing_circle)
-        testing_circle = draw_testing_circle()
+
+        for item in to_show:
+            item._show(canvas)
+
         draw_time = millis() - last_redraw
 
     free_time = int(max(0, cs.UPS_TICK - millis() + tick_start))/2

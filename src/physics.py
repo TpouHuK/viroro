@@ -6,27 +6,48 @@ import constants as cs
 import time
 from math import copysign, radians
 
-class Car():
-    def __init__(self, space, position):
+class PGObject():
+    def _upd(self):
+        pass
+
+    def _show(self):
+        pass
+
+    def _cls(self, canvas):
+        for line in self.on_screen:
+            canvas.delete(line)
         self.on_screen = []
+
+class Car(PGObject):
+    def __init__(self, props, position):
+        self.on_screen = []
+        self._to_space = []
+
         position = Vec2d(*position)
-        tw = 0.10
-        th = 0.20
-        bw = 0.10
-        bh = 0.20
 
-        t_w_l = Wheel(space, position + Vec2d(-tw, -th))
-        t_w_r = Wheel(space, position + Vec2d(+tw, -th))
+        tw = props["tw"]
+        th = props["th"]
+        bw = props["bw"]
+        bh = props["bh"]
 
-        b_w_l = Wheel(space, position + Vec2d(-bw, +th))
-        b_w_r = Wheel(space, position + Vec2d(+bw, +th))
+        w_r = props["wheel_radius"]
+        w_w = props["wheel_width"]
+        w_m = props["wheel_mass"]
+
+        t_w_l = Wheel(w_r, w_w, w_m, position + Vec2d(-tw, -th))
+        t_w_r = Wheel(w_r, w_w, w_m, position + Vec2d(+tw, -th))
+
+        b_w_l = Wheel(w_r, w_w, w_m, position + Vec2d(-bw, +th))
+        b_w_r = Wheel(w_r, w_w, w_m, position + Vec2d(+bw, +th))
 
         self.wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
 
-        self.width = 0.25
-        self.height = 0.30
-        self.mass = 1.4
-        self.motor_power = 0
+        for w in self.wheels:
+            self._to_space.extend(w._to_space)
+
+        self.width = props["car_width"]
+        self.height = props["car_height"]
+        self.mass = props["car_mass"]
         
         moment = pymunk.moment_for_box(self.mass, (self.width, self.height))
         self.body = pymunk.Body(self.mass, moment)
@@ -34,11 +55,11 @@ class Car():
 
         w = self.width
         h = self.height
-
-
         self.shape = pymunk.Poly(self.body, [(-w/2, -h), (w/2, -h), (w/2, h), (-w/2, h)])
-        self.shape.friction = 0.1
-        space.add(self.body, self.shape)
+        self.shape.friction = props["hull_friction"]
+        self._to_space.extend((self.body, self.shape))
+
+        self.motor_power = 0
 
         def glue(b1, b2):
             #c1 = pymunk.constraints.PivotJoint(b1, b2, b2.position, b1.position)
@@ -50,9 +71,8 @@ class Car():
             c2.collide_bodies = False
             c1.error_bias = 0
             c2.error_bias = 0
-            space.add(c1, c2)
+            self._to_space.extend((c1, c2))
             return c2
-            #space.add(c1)
 
         glue(b_w_l.body, self.body)
         glue(b_w_r.body, self.body)
@@ -68,18 +88,15 @@ class Car():
     def push(self, x):
         self.motor_power = x
 
-    def upd(self):
-        how_much = self.motor_power * 300
-        self.body.apply_force_at_local_point((0, how_much), (0, -self.height/2))
+    def _upd(self):
+        force = self.motor_power
+        self.body.apply_force_at_local_point((0, force), (0, -self.height/2))
 
-    def show(self, canvas):
+    def _show(self, canvas):
         for wheel in self.wheels:
-            wheel.show(canvas)
+            wheel._show(canvas)
 
-        for line in self.on_screen:
-            canvas.delete(line)
-        self.on_screen = []
-
+        self._cls(canvas)
         for line in self._lines_to_draw():
             p1, p2 = line
             self.on_screen.append(canvas.create_line(*p1, *p2))
@@ -97,16 +114,15 @@ class Car():
         return lines
 
 
-class Wheel():
-    def __init__(self, space, position):
-        r = 0.05 # 3cm
-        w = 0.03 # 2cm
-        m = 0.01 # 10 g
+class Wheel(PGObject):
+    def __init__(self, radius, width, mass, position):
+        r = radius # 0.05 # 3cm
+        w = width # 0.03 # 2cm
+        m = mass # 0.01 # 10 g
         self.radius = r
         self.width = w
         self.mass = m
 
-        # https://en.wikipedia.org/wiki/List_of_moments_of_inertia
         moment = 1/12 * m * (3*r**2 + w**2) 
 
         #self.slip_force = float("inf")
@@ -134,7 +150,7 @@ class Wheel():
 
         self.body.velocity_func = wheel_physics
 
-        space.add(self.body, self.shape)
+        self._to_space = [self.body, self.shape]
         self.on_screen = []
 
     def _lines_to_draw(self):
@@ -149,83 +165,82 @@ class Wheel():
         lines.append((verts[-1], verts[0]))
         return lines
 
-    def show(self, canvas):
-        for line in self.on_screen:
-            canvas.delete(line)
-        self.on_screen = []
-
+    def _show(self, canvas):
+        self._cls(canvas)
         for line in self._lines_to_draw():
             p1, p2 = line
             self.on_screen.append(canvas.create_line(*p1, *p2))
 
+class Circle(PGObject):
+    def __init__(self, position,
+            mass, radius, elasticity):
+        self.mass = mass
+        self.radius = radius
+        moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0)) 
+        body = pymunk.Body(self.mass, moment)
+                
+        body.position = position
 
-class PhysicalField():
+        self.shape = pymunk.Circle(body, self.radius, (0, 0))
+        self.shape.elasticity = elasticity
+
+        self._to_space = [body, self.shape]
+        self.on_screen = []
+
+    def bump(self, force):
+        self.shape.body.apply_impulse_at_local_point(force)
+
+    def _show(self, canvas):
+        self._cls(canvas)
+        pos = cs.m_to_pd(self.shape.body.position)
+        rad = cs.m_to_p(self.radius)
+        self.on_screen = [canvas.create_oval(pos.x - rad, pos.y - rad,
+                pos.x + rad, pos.y + rad, fill="green", width=2)]
+
+
+class Walls(PGObject):
+    def __init__(self, walls, thickness, elasticity):
+        self._to_space = []
+        self.on_screen = []
+
+        self.s_walls = []
+        for wall in walls:
+            body = pymunk.Body(mass=0, moment=0,
+                    body_type=pymunk.Body.STATIC)
+            collision_shape = pymunk.Segment(body, *wall, thickness)
+            collision_shape.elasticity = elasticity
+            self._to_space.extend((body, collision_shape))
+
+            self.s_walls.append(collision_shape)
+
+    def _show(self, canvas):
+        if self.on_screen:
+            return
+        for shape in self.s_walls:
+            self.on_screen.append(
+                    canvas.create_line(*cs.m_to_pd(shape.a),
+                        *cs.m_to_pd(shape.b),
+                        fill="black", width=3))
+
+
+class PymunkField():
     def __init__(self):
         self.space = pymunk.Space()
         self.space.iterations = cs.ITERATIONS
+        self._to_upd = []
 
-        for wall in field.walls:
-            body = pymunk.Body(0, 0, body_type=pymunk.Body.STATIC)
-            collision_shape = pymunk.Segment(body, *wall, cs.WALL_THICKNESS)
-            collision_shape.elasticity = 0.999
-            self.space.add(body, collision_shape)
-
-        car = Car(self.space, (0.5, 0.5))
-        self.car = car
-        self.to_show = [car]
-
-        #wheel1 = Wheel(self.space, (0.5, 0.5))
-        #wheel2 = Wheel(self.space, (0.7, 0.5))
-        #c1 = pymunk.constraints.PivotJoint(wheel2.body, wheel1.body,
-                #(0, 0), (0.3, 0))
-        #c2 = pymunk.constraints.PivotJoint(wheel2.body, wheel1.body,
-                #(0, 0.2), (0.3, 0.2))
-        #c3 = pymunk.constraints.GearJoint(wheel2.body, wheel1.body, 0, 1)
-        #self.space.add(c1)
-        #self.space.add(c3)
-        #self.space.add(c2)
-        
-        #self.to_show.append(wheel1)
-        #self.to_show.append(wheel2)
-
-        self.create_testing_circle()
-
-
-    def get_walls_to_draw(self):
-        walls = []
-        for shape in self.space.shapes:
-            if isinstance(shape, pymunk.Segment):
-                assert shape.body.body_type == pymunk.Body.STATIC
-                walls.append((cs.m_to_pd(shape.a), cs.m_to_pd(shape.b)))
-        return walls
-
-    def get_circle_to_draw(self):
-        pos = self.test_circle.body.position
-        radius = self.test_circle.radius
-        return (cs.m_to_pd(pos), cs.m_to_p(radius))
-
-    def create_testing_circle(self):
-        mass = 0.1
-        radius = 0.15
-        x, y = 0.5, 3.5
-        inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
-        body = pymunk.Body(mass, inertia)
-        body.position = x, y
-        shape = pymunk.Circle(body, radius, (0, 0))
-        shape.elasticity = 0.999
-        shape.friction = 0.5
-        
-        body.apply_impulse_at_local_point((0.3, 1))
-        self.test_circle = shape
-
-        self.space.add(body, shape)
+    def add(self, *items):
+        for item in items:
+            self.space.add(*item._to_space)
+            self._to_upd.append(item)
 
     def step(self):
         for i in range(cs.MICROSTEP_AMOUNT):
-            self.car.upd()
+            for item in self._to_upd:
+                item._upd()
             self.space.step(cs.MICROSTEP_SIZE)
 
 
 if __name__ == "__main__":
-    fd = PhysicalField()
+    fd = PymunkField()
     print()
