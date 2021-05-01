@@ -24,8 +24,9 @@ class Car():
         self.wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
 
         self.width = 0.25
-        self.height = 0.40
+        self.height = 0.30
         self.mass = 1.4
+        self.motor_power = 0
         
         moment = pymunk.moment_for_box(self.mass, (self.width, self.height))
         self.body = pymunk.Body(self.mass, moment)
@@ -36,6 +37,7 @@ class Car():
 
 
         self.shape = pymunk.Poly(self.body, [(-w/2, -h), (w/2, -h), (w/2, h), (-w/2, h)])
+        self.shape.friction = 0.1
         space.add(self.body, self.shape)
 
         def glue(b1, b2):
@@ -46,8 +48,8 @@ class Car():
             c2 = pymunk.constraints.GearJoint(b1, b2, 0, 1)
             c1.collide_bodies = False
             c2.collide_bodies = False
-            c1.error_bias = 0.1
-            c2.error_bias = 0.1
+            c1.error_bias = 0
+            c2.error_bias = 0
             space.add(c1, c2)
             return c2
             #space.add(c1)
@@ -63,8 +65,12 @@ class Car():
         self.r1.phase = angle
         self.r2.phase = angle
 
-    def push(self, how_much):
-        self.body.apply_impulse_at_local_point((0, how_much), (0, -self.height/2))
+    def push(self, x):
+        self.motor_power = x
+
+    def upd(self):
+        how_much = self.motor_power * 300
+        self.body.apply_force_at_local_point((0, how_much), (0, -self.height/2))
 
     def show(self, canvas):
         for wheel in self.wheels:
@@ -103,8 +109,9 @@ class Wheel():
         # https://en.wikipedia.org/wiki/List_of_moments_of_inertia
         moment = 1/12 * m * (3*r**2 + w**2) 
 
-        self.slip_force = float("inf")
-        self.friction_force = 1
+        #self.slip_force = float("inf")
+        self.slip_force = 60
+        self.friction_force = 30
 
         self.body = pymunk.Body(m, moment)
         self.body.position = position
@@ -118,8 +125,8 @@ class Wheel():
             local_velocity = body.velocity.rotated(-body.angle)
             
             sf_imp = copysign(min(self.slip_force*dt, abs(local_velocity.x*m)), -local_velocity.x)
-            rf_imp = copysign(min(self.friction_force*dt, abs(local_velocity.y)*m), -local_velocity.y)
-            #rf_imp = rf_imp + copysign(sf_imp, local_velocity.y)
+            rf_imp = copysign(min(self.friction_force*dt, abs(local_velocity.y)*0.01*m), -local_velocity.y)
+            #wf_imp = rf_imp + copysign(sf_imp*0.1, local_velocity.y)
 
             body.apply_impulse_at_local_point((sf_imp, rf_imp))
             #body.angular_velocity *= 0.98
@@ -215,6 +222,7 @@ class PhysicalField():
 
     def step(self):
         for i in range(cs.MICROSTEP_AMOUNT):
+            self.car.upd()
             self.space.step(cs.MICROSTEP_SIZE)
 
 
