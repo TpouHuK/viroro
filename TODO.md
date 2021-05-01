@@ -1,0 +1,4 @@
+- [x] draw field and a car using coordinates
+- [x] simulate circle bouncing on a soapy surface
+- [ ] add a car
+- [ ] add distance sensors

@@ -1,0 +1,6 @@
+http://www.iforce2d.net/b2dtut/top-down-car // Top down car physics in box2d
+https://www.youtube.com/watch?v=mJ1ZfGDTMCY // Godot Recipies
+http://engineeringdotnet.blogspot.com/2010/04/simple-2d-car-physics-in-games.html // Some blogpost
+https://blog.coast.ai/using-reinforcement-learning-in-python-to-teach-a-virtual-car-to-avoid-obstacles-6e782cc7d4c6 // Lol, thats what we are trying to do (kinda)
+
+http://alexandr4784.narod.ru/sdvmpdf1/smgl05_36.pdf // Вычисление моментов инерции
