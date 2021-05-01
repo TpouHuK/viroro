@@ -22,19 +22,24 @@ canvas = window["-GRAPH-"].TKCanvas
 
 p_field = ph.PymunkField()
 car_props = {
-        "wheel_radius": 0.035,
-        "wheel_width": 0.025,
-        "wheel_mass": 0.01,
-        "tw": 0.10,
-        "th": 0.20,
-        "bw": 0.10,
-        "bh": 0.20,
-        
-        "car_width": 0.25,
-        "car_height": 0.30,
-        "car_mass": 1.4,
-        "hull_friction": 0.1,
-        }
+    "wheel_radius": 0.035,
+    "wheel_width": 0.025,
+    "wheel_mass": 0.01,
+    "wheel_slipforce": 60,
+    "wheel_friction_force": 30,
+    "wheel_side_friction": 0.5,
+    "wheel_weird_forward_friction": 0.1,
+
+    "tw": 0.10,
+    "th": 0.20,
+    "bw": 0.10,
+    "bh": 0.20,
+    
+    "car_width": 0.25,
+    "car_height": 0.30,
+    "car_mass": 1.4,
+    "hull_friction": 0.1,
+    }
 
 car = ph.Car(car_props, position=(0.5, 0.5))
 circle = ph.Circle(position=(0.5, 3.5), mass=0.1,
