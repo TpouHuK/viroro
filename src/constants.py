@@ -17,21 +17,21 @@ def p_to_m(x):
 
 # Gui config
 WINDOW_TITLE = "🔥 hot garbage"
-TILE_SIZE = 110
 
+TILE_SIZE = 110
 FIELD_SIZE = Vec2d(8, 6) # Field size in squares
 FIELD_SIZE_PIXELS = m_to_p(Vec2d(FIELD_SIZE.x, FIELD_SIZE.y))
 
 UPS = 60 # Pymunk updates per second
 UPS_TICK = 1000/UPS
-FPS = 60 # Redraws per second
+FPS = 60 # Screen redraws per second
 FPS_TICK = 1000/FPS
 
 # Pymunk config
 WALL_THICKNESS = 0.01  # Segment wall added thickness
 WALL_ELASTICITY = 0.999
 
-ITERATIONS = 15 # Default 10
-MICROSTEP_AMOUNT = 150
+ITERATIONS = 15 # Pymunk solver iterations
+MICROSTEP_AMOUNT = 150 # Making lots of smaller steps for accuracy
 STEP_SIZE = 1/UPS
 MICROSTEP_SIZE = STEP_SIZE/MICROSTEP_AMOUNT

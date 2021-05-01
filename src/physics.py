@@ -216,6 +216,13 @@ class Circle(PGObject):
 
 
 class Walls(PGObject):
+    """Non-movable(static) thin field walls.
+
+    walls -- list of point pairs [((0, 0), (1, 1)), ...]
+             each pair represents a wall
+    thickness -- thickness of a walls, mostly to prevent pymunk bugs
+    elasticity -- elasticity of collisions with a walls
+    """
     def __init__(self, walls, thickness, elasticity):
         self._to_space = []
         self.on_screen = []
