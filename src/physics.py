@@ -1,6 +1,5 @@
 from math import copysign, radians
 import pymunk
-from PySimpleGUI import obj_to_string as pf
 from pymunk.vec2d import Vec2d
 import constants as cs
 
