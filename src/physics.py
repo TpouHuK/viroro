@@ -204,6 +204,7 @@ class Circle(PGObject):
         self.on_screen = []
 
     def bump(self, force):
+        """Apply impulse to circle."""
         self.shape.body.apply_impulse_at_local_point(force)
 
     def _show(self, canvas):

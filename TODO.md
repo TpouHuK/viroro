@@ -5,6 +5,7 @@
 - [x] fix field class
 
 - [ ] add distance sensors
+- [ ] remove constants file
 
 - [ ] propper front wheel alignment?
 - [ ] 4wd propulsion?
@@ -13,3 +14,5 @@
 - [ ] simulation constructor & tweaker
 - [ ] field constructor & tweaker
 - [ ] add car constructor & tweaker
+
+- [ ] some gifs to readme
