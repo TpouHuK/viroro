@@ -24,7 +24,6 @@ class PGObject():
 
 class Car(PGObject):
     def __init__(self, props, position):
-        """Car with properties as in props."""
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
@@ -93,6 +92,10 @@ class Car(PGObject):
         force -- newtons (F=ma)
         """
         self.motor_power = force
+
+    @property
+    def speed(self):
+        return abs(self.body.velocity)
 
     def _upd(self):
         force = self.motor_power
@@ -213,7 +216,7 @@ class Circle(PGObject):
         rad = cs.m_to_p(self.radius)
         self.on_screen = [
                 canvas.create_oval(pos.x - rad, pos.y - rad,
-                pos.x + rad, pos.y + rad, fill="green", width=2)]
+                pos.x + rad, pos.y + rad, fill="#63ff92", width=1)]
 
 
 class Walls(PGObject):
