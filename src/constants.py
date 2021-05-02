@@ -35,6 +35,6 @@ FPS_TICK = 1000/FPS
 
 # Pymunk simulation config
 ITERATIONS = 15 # Pymunk solver iterations
-MICROSTEP_AMOUNT = 150 # Making lots of smaller steps for accuracy
+MICROSTEP_AMOUNT = 125 # Making lots of smaller steps for accuracy
 STEP_SIZE = 1/UPS
 MICROSTEP_SIZE = STEP_SIZE/MICROSTEP_AMOUNT

@@ -5,11 +5,5 @@
 - [x] fix field class
 - [x] add distance sensors
 
-- [ ] remove constants file
-- [ ] propper front wheel alignment?
 - [ ] 4wd propulsion?
-- [ ] dumping to json?
-- [ ] simulation constructor & tweaker
-- [ ] field constructor & tweaker
-- [ ] add car constructor & tweaker
-- [ ] some gifs to readme
+- [ ] propper front wheel alignment?

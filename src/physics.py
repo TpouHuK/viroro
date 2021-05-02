@@ -140,8 +140,8 @@ class Car(PGObject):
 
         t_w_l = Wheel(*w_props, position + Vec2d(-tw, -th), shape_filter)
         t_w_r = Wheel(*w_props, position + Vec2d(+tw, -th), shape_filter)
-        b_w_l = Wheel(*w_props, position + Vec2d(-bw, +th), shape_filter)
-        b_w_r = Wheel(*w_props, position + Vec2d(+bw, +th), shape_filter)
+        b_w_l = Wheel(*w_props, position + Vec2d(-bw, +bh), shape_filter)
+        b_w_r = Wheel(*w_props, position + Vec2d(+bw, +bh), shape_filter)
         self.wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
         for w in self.wheels:
             self._to_space.extend(w._to_space)
@@ -278,7 +278,7 @@ class Wheel(PGObject):
                     self.friction_force*dt,
                     abs(local_velocity.y)*m*weird_forward_friction),
                 -local_velocity.y)
-
+            horz_imp *= 0.99 # FIXME what is me
             body.apply_impulse_at_local_point((horz_imp, vert_imp))
             pymunk.Body.update_velocity(body, gravity, damping, dt)
 
