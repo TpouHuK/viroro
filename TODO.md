@@ -3,16 +3,13 @@
 - [x] add a car
 - [x] fix car class
 - [x] fix field class
+- [x] add distance sensors
 
-- [ ] add distance sensors
 - [ ] remove constants file
-
 - [ ] propper front wheel alignment?
 - [ ] 4wd propulsion?
-
 - [ ] dumping to json?
 - [ ] simulation constructor & tweaker
 - [ ] field constructor & tweaker
 - [ ] add car constructor & tweaker
-
 - [ ] some gifs to readme
