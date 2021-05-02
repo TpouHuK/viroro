@@ -5,6 +5,17 @@ import constants as cs
 
 
 class PGObject():
+    """Base class for all physical objects.
+    
+    PGObject stands for Physics and Graphics object.
+    They should provide following properties/function:
+    
+    self._to_space -- list of items that are added to pymunk.Space
+
+    self._upd() -- function that is called before every simulation tick
+    self._show(canvas) -- function that draws object on a tkinter canvas
+    self._cls(canvas) -- function that removes object from a tkinter canvas
+    """
     def _upd(self):
         """Called every simulation tick."""
         pass
@@ -21,12 +32,23 @@ class PGObject():
 
 
 def draw_circle(canvas, point, radius, *args, **kwargs):
+    """Draw circle on tkinter canvas."""
     return canvas.create_oval(
             point.x - radius, point.y - radius,
     point.x + radius, point.y + radius, *args, **kwargs)
 
 
 class DistanceSensor(PGObject):
+    """Distance sensor that simulates IR/US sensor.
+
+    body -- pymunk.Body() to attach sensor to
+    v_offest -- TODO
+    h_offset -- TODO
+    angle -- TODO
+    distance -- maximum measurement distance
+    width -- width of a beam
+    shape_filter -- pymunk.ShapeFilter that is applied to a shape
+    """
     def __init__(
             self, body, v_offset, h_offset, angle, distance, width,
             shape_filter):
@@ -42,6 +64,7 @@ class DistanceSensor(PGObject):
         self._to_space = [self._shape]
 
     def get_collision_point(self):
+        """Return point in pymunk world coords where sensor detects something or None."""
         p1, p2 = self._world_cords()
         q = self._shape.space.segment_query_first(
                 p1, p2, self._shape.radius,
@@ -51,6 +74,7 @@ class DistanceSensor(PGObject):
         return None
 
     def read_distance(self):
+        """Return current sensor value (colliding distance), or inf if no collision."""
         p1, p2 = self._world_cords()
         q = self._shape.space.segment_query_first(
                 p1, p2, self._shape.radius,
@@ -60,6 +84,7 @@ class DistanceSensor(PGObject):
         return float("inf")
 
     def _world_cords(self):
+        """Start and end points of sensor ray in pymunk world cords."""
         body = self._shape.body
         p1 = self._shape.a.rotated(body.angle) + body.position
         p2 = self._shape.b.rotated(body.angle) + body.position
@@ -85,7 +110,15 @@ class DistanceSensor(PGObject):
 
 
 class Car(PGObject):
+    """Car object with wheels and ??? FIXME"""
+
     def __init__(self, props, position, group=1):
+        """Create a car.
+
+        props -- car properties, big dictionary, big mess
+        position -- position in pymunk world coords
+        group -- car collision group, every car should 
+        """
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
@@ -169,9 +202,11 @@ class Car(PGObject):
 
     @property
     def speed(self):
+        """Speed in pymunk units"""
         return abs(self.body.velocity)
 
     def get_sensor_values(self):
+        """Return list of floats, representing value of each sensor."""
         return [sensor.read_distance() for sensor in self.sensors]
 
     def _upd(self):
