@@ -352,7 +352,3 @@ class PymunkField():
                 item._upd()
             self.space.step(cs.MICROSTEP_SIZE)
 
-
-if __name__ == "__main__":
-    fd = PymunkField()
-    print()

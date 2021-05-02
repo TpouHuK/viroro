@@ -61,6 +61,7 @@ def rect_walls(w, h, x=0, y=0):
 def walls_1():
     return ph.Walls(rect_walls(7, 5), thickness=0.01, elasticity=0.999)
 
+
 def walls_2():
     walls = [
             ((0, 0), (0, 4)),
