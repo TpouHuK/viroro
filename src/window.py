@@ -10,6 +10,9 @@ def millis():
 def create_test_1_window():
     layout = [
         [
+            sg.Button("Debug button", key="-DEBUG-"),
+        ],
+        [
             sg.Text("Angle", size=(6, 1)),
             sg.Slider(range=(-45, 45), default_value=0, orientation="h", key="-ANGLE-")
         ],
@@ -33,7 +36,7 @@ def create_test_1_window():
     return window
 
 
-def test_gui_1(p_field, car, to_show):
+def test_gui_1(p_field, car, to_show, debug):
     window = create_test_1_window()
     canvas = window["-CANVAS-"].TKCanvas
 
@@ -63,6 +66,8 @@ def test_gui_1(p_field, car, to_show):
             window["-PAUSE-"].update("Pause" if running else "Run")
         elif event == "-STEP-":
             step()
+        elif event == "-DEBUG-":
+            debug()
 
         if millis() - last_calculation >= cs.UPS_TICK:
             last_calculation = millis()

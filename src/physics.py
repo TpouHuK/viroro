@@ -20,11 +20,76 @@ class PGObject():
         self.on_screen = []
 
 
+def draw_circle(canvas, point, radius, *args, **kwargs):
+    return canvas.create_oval(
+            point.x - radius, point.y - radius,
+    point.x + radius, point.y + radius, *args, **kwargs)
+
+
+class DistanceSensor(PGObject):
+    def __init__(
+            self, body, v_offset, h_offset, angle, distance, width,
+            shape_filter):
+        self.on_screen = []
+        self._to_space = []
+        self._distance = distance
+
+        start = Vec2d(h_offset, -v_offset)
+        finish = start + Vec2d(0, -distance).rotated(radians(angle))
+        self._shape = pymunk.Segment(body, start, finish, width)
+        self._shape.sensor = True
+        self._shape.filter = shape_filter
+        self._to_space = [self._shape]
+
+    def get_collision_point(self):
+        p1, p2 = self._world_cords()
+        q = self._shape.space.segment_query_first(
+                p1, p2, self._shape.radius,
+                self._shape.filter)
+        if q:
+            return q.point
+        return None
+
+    def read_distance(self):
+        p1, p2 = self._world_cords()
+        q = self._shape.space.segment_query_first(
+                p1, p2, self._shape.radius,
+                self._shape.filter)
+        if q:
+            return q.alpha * self._distance
+        return float("inf")
+
+    def _world_cords(self):
+        body = self._shape.body
+        p1 = self._shape.a.rotated(body.angle) + body.position
+        p2 = self._shape.b.rotated(body.angle) + body.position
+        return (p1, p2)
+
+    def _show(self, canvas):
+        body = self._shape.body
+        p1, p2 = self._world_cords()
+        p1 = cs.m_to_pd(p1)
+
+        self._cls(canvas)
+        self.on_screen = []
+        point = self.get_collision_point()
+        if point:
+            point = cs.m_to_pd(point)
+            p2 = point
+            self.on_screen.append(canvas.create_line(*p1, *p2, fill="#5cffff"))
+            self.on_screen.append(draw_circle(
+                canvas, point, radius=3, fill="#ff5cef", width=1))
+        else:
+            p2 = cs.m_to_pd(p2)
+            self.on_screen.append(canvas.create_line(*p1, *p2, fill="#5cffff"))
+
+
 class Car(PGObject):
-    def __init__(self, props, position):
+    def __init__(self, props, position, group=1):
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
+        shape_filter = pymunk.ShapeFilter(group)
 
         position = Vec2d(*position)
         tw = props["tw"]
@@ -39,10 +104,10 @@ class Car(PGObject):
             props["wheel_side_friction"],
             props["wheel_weird_forward_friction"])
 
-        t_w_l = Wheel(*w_props, position + Vec2d(-tw, -th))
-        t_w_r = Wheel(*w_props, position + Vec2d(+tw, -th))
-        b_w_l = Wheel(*w_props, position + Vec2d(-bw, +th))
-        b_w_r = Wheel(*w_props, position + Vec2d(+bw, +th))
+        t_w_l = Wheel(*w_props, position + Vec2d(-tw, -th), shape_filter)
+        t_w_r = Wheel(*w_props, position + Vec2d(+tw, -th), shape_filter)
+        b_w_l = Wheel(*w_props, position + Vec2d(-bw, +th), shape_filter)
+        b_w_r = Wheel(*w_props, position + Vec2d(+bw, +th), shape_filter)
         self.wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
         for w in self.wheels:
             self._to_space.extend(w._to_space)
@@ -57,6 +122,7 @@ class Car(PGObject):
         self.shape = pymunk.Poly(
             self.body, [(-w/2, -h), (w/2, -h), (w/2, h), (-w/2, h)])
         self.shape.friction = props["hull_friction"]
+        self.shape.filter = shape_filter
         self._to_space.extend((self.body, self.shape))
 
         def glue(b1, b2):
@@ -74,6 +140,15 @@ class Car(PGObject):
         glue(b_w_r.body, self.body)
         self.lw_gearjoint = glue(t_w_l.body, self.body)
         self.rw_gearjoint = glue(t_w_r.body, self.body)
+
+        self.sensors = []
+        for s_props in props['sensors']:
+            sens = DistanceSensor(
+                self.body, **s_props,
+                shape_filter=shape_filter)
+            self.sensors.append(sens)
+            self._to_space.extend(sens._to_space)
+
 
     def turn(self, deg):
         """Set angle of front wheels in degrees.
@@ -100,6 +175,9 @@ class Car(PGObject):
         self.body.apply_force_at_local_point((0, force), (0, -self.height/2))
 
     def _show(self, canvas):
+        for sensor in self.sensors:
+            sensor._show(canvas)
+
         for wheel in self.wheels:
             wheel._show(canvas)
 
@@ -126,7 +204,8 @@ class Wheel(PGObject):
             self, radius, width,
             mass, slip_force, friction_force,
             side_friction, weird_forward_friction,
-            position):
+            position,
+            shape_filter=pymunk.ShapeFilter()):
         r = radius
         w = width
         m = mass
@@ -147,6 +226,7 @@ class Wheel(PGObject):
             (w/2, r),
             (-w/2, r)])
         self.shape.friction = side_friction
+        self.shape.filter = shape_filter
 
         def wheel_physics(body, gravity, damping, dt):
             local_velocity = body.velocity.rotated(-body.angle)

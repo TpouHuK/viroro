@@ -19,7 +19,7 @@ def p_to_m(x):
 WINDOW_TITLE = "🔥 hot garbage"
 
 TILE_SIZE = 110 # How many pixels in one pymunk unit (meter)
-FIELD_SIZE = Vec2d(8, 6)
+FIELD_SIZE = Vec2d(10, 5)
 FIELD_SIZE_PIXELS = m_to_p(Vec2d(FIELD_SIZE.x, FIELD_SIZE.y))
 
 UPS = 60 # Pymunk updates per second
