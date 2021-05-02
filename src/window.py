@@ -10,7 +10,7 @@ def millis():
 def create_test_1_window():
     layout = [
         [
-            sg.Button("Debug button", key="-DEBUG-"),
+            sg.Button("Debug button", key="-DEBUG-"), sg.CBox("AI", key="-AI-")
         ],
         [
             sg.Text("Angle", size=(6, 1)),
@@ -49,8 +49,11 @@ def test_gui_1(p_field, car, to_show, debug):
 
     def step():
         ang = values["-ANGLE-"]
-        car.turn(-ang)
-        car.push(-values["-FORCE-"]/1.5)
+        if not values['-AI-']:
+            car.steer(ang)
+            car.push(values["-FORCE-"]/1.5)
+        else:
+            car.algo(car)
         p_field.step()
 
     running = False

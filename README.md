@@ -12,4 +12,4 @@ Version: not even alpha.
 
 `git clone https://github.com/TpouHuK/viroro.git && cd viroro && pipenv install && pipenv run python3 src/main.py`
 
-![image](https://user-images.githubusercontent.com/35433062/116785818-35dd8300-aaa4-11eb-8dfe-e9c58313672d.png)
+![image](https://user-images.githubusercontent.com/35433062/116816563-22491f80-ab6b-11eb-93fa-7685f28d7f64.png)

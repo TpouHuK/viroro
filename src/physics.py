@@ -89,6 +89,7 @@ class Car(PGObject):
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
+        self.algo = None
         shape_filter = pymunk.ShapeFilter(group)
 
         position = Vec2d(*position)
@@ -150,12 +151,12 @@ class Car(PGObject):
             self._to_space.extend(sens._to_space)
 
 
-    def turn(self, deg):
+    def steer(self, deg):
         """Set angle of front wheels in degrees.
 
         deg -- degrees (positive -> clockwise, negative -> counterclockwise)
         """
-        angle = radians(deg)
+        angle = -radians(max(min(30, deg), -30))
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
 
@@ -164,11 +165,14 @@ class Car(PGObject):
 
         force -- newtons (F=ma)
         """
-        self.motor_power = force
+        self.motor_power = -force
 
     @property
     def speed(self):
         return abs(self.body.velocity)
+
+    def get_sensor_values(self):
+        return [sensor.read_distance() for sensor in self.sensors]
 
     def _upd(self):
         force = self.motor_power
