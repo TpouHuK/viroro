@@ -1,4 +1,3 @@
-import time
 import window
 import physics
 from test_items import car_1, circle_1, walls_1, walls_2
