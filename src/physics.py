@@ -8,7 +8,7 @@ class PGObject():
     """Base class for all physical objects.
     
     PGObject stands for Physics and Graphics object.
-    They should provide following properties/function:
+    They should provide following properties/functions:
     
     self._to_space -- list of items that are added to pymunk.Space
 
