@@ -134,7 +134,7 @@ class Car(PGObject):
             c1.collide_bodies = False
             c2.collide_bodies = False
             c1.error_bias = 0
-            c2.error_bias = 0
+            c2.error_bias = 0.00001
             self._to_space.extend((c1, c2))
             return c2
         glue(b_w_l.body, self.body)
@@ -156,7 +156,7 @@ class Car(PGObject):
 
         deg -- degrees (positive -> clockwise, negative -> counterclockwise)
         """
-        angle = -radians(max(min(30, deg), -30))
+        angle = -radians(max(min(45, deg), -45))
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
 

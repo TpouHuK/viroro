@@ -82,7 +82,7 @@ def test_gui_1(p_field, car, to_show, debug):
             last_redraw = millis()
             for item in to_show:
                 item._show(canvas)
-            window["-TEXT-"].update(f"cacl_time: {calc_time}, draw_time: {draw_time}, car_speed: {round(car.speed*3.6, 2)}")
+            window["-TEXT-"].update(f"calc_time: {calc_time}, draw_time: {draw_time}, car_speed: {round(car.speed*3.6, 2)}")
             draw_time = millis() - last_redraw
 
     window.close()

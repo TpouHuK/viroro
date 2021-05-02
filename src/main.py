@@ -5,11 +5,12 @@ from test_items import car_1, circle_1, walls_1, walls_2
 def algo(car):
     sensors = car.get_sensor_values()
     p = sensors[2] - sensors[3]
-    spd = 10
-    car.steer(p*30)
+    spd = 20
+    car.steer(p*100)
     car.push(spd)
 
 car = car_1(position=(0.5, 3.5), group=1)
+#car2 = car_1(position=(1.5, 3.5), group=2)
 car.algo = algo
 walls = walls_2()
 

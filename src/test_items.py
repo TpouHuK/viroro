@@ -5,7 +5,8 @@ import physics as ph
 def car_1(position, group):
     v_off = [0.14]*6
     h_off = [-0.06, -0.05, -0.03, 0.03, 0.05, 0.06]
-    ang = [-90, 0, 45, -45, 0, 90]
+    #ang = [-90, 0, 45, -45, 0, 90]
+    ang = [-90, 0, 60, -60, 0, 90]
     distance = [2]*6
     width = [0.001]*6
     sensors = []
