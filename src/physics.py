@@ -223,7 +223,6 @@ class Car(PGObject):
 
         force_percent = (1-x)**0.07
         force = self.max_power*self.motor_power*force_percent
-        print(force)
         wheel_force = -force/4
 
         for wheel in self._wheels:
