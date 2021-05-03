@@ -27,6 +27,7 @@ def car_1(position, group):
         "wheel_friction_force": 30,
         "wheel_side_friction": 0.5,
         "wheel_weird_forward_friction": 0.01,
+        
 
         "tw": 0.10,
         "th": 0.20,
@@ -36,6 +37,9 @@ def car_1(position, group):
         "car_width": 0.25,
         "car_height": 0.30,
         "car_mass": 1.4,
+        "max_steer_angle": 45,
+        "max_speed": 6,
+        "max_power": 60 * 1.4,
         "hull_friction": 0.1,
         "sensors": sensors,
     }

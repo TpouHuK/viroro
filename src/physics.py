@@ -1,4 +1,4 @@
-from math import copysign, radians
+from math import copysign, radians, sqrt
 import pymunk
 from pymunk.vec2d import Vec2d
 import constants as cs
@@ -142,13 +142,18 @@ class Car(PGObject):
         t_w_r = Wheel(*w_props, position + Vec2d(+tw, -th), shape_filter)
         b_w_l = Wheel(*w_props, position + Vec2d(-bw, +bh), shape_filter)
         b_w_r = Wheel(*w_props, position + Vec2d(+bw, +bh), shape_filter)
-        self.wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
-        for w in self.wheels:
+        self._wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
+        for w in self._wheels:
             self._to_space.extend(w._to_space)
 
         self.width = props["car_width"]
         self.height = props["car_height"]
         self.mass = props["car_mass"]
+        
+        self.max_steer_angle = props["max_steer_angle"]
+        self.max_speed = props["max_speed"]
+        self.max_power = props["max_power"]
+
         moment = pymunk.moment_for_box(self.mass, (self.width, self.height))
         self.body = pymunk.Body(self.mass, moment)
         self.body.position = position
@@ -189,16 +194,16 @@ class Car(PGObject):
 
         deg -- degrees (positive -> clockwise, negative -> counterclockwise)
         """
-        angle = -radians(max(min(45, deg), -45))
+        angle = -radians(max(min(self.max_steer_angle, deg), -self.max_steer_angle))
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
 
-    def push(self, force):
-        """Set force with which car is pushed forward.
+    def push(self, power):
+        """Set power with which car is pushed forward.
 
-        force -- newtons (F=ma)
+        power -- 0-100
         """
-        self.motor_power = -force
+        self.motor_power = power/100
 
     @property
     def speed(self):
@@ -210,14 +215,25 @@ class Car(PGObject):
         return [sensor.read_distance() for sensor in self.sensors]
 
     def _upd(self):
-        force = self.motor_power
-        self.body.apply_force_at_local_point((0, force), (0, -self.height/2))
+        #fixme, speed should be taken from wheels not from the car
+        cur_speed = self.speed
+        
+        x = min(1, max(cur_speed, 0)/self.max_speed)
+        assert 0 <= x <= 1
+
+        force_percent = (1-x)**0.07
+        force = self.max_power*self.motor_power*force_percent
+        print(force)
+        wheel_force = -force/4
+
+        for wheel in self._wheels:
+            wheel.body.apply_force_at_local_point((0, wheel_force))
 
     def _show(self, canvas):
         for sensor in self.sensors:
             sensor._show(canvas)
 
-        for wheel in self.wheels:
+        for wheel in self._wheels:
             wheel._show(canvas)
 
         self._cls(canvas)
