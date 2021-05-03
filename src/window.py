@@ -36,7 +36,7 @@ def create_test_1_window():
     return window
 
 
-def test_gui_1(p_field, car, to_show, debug):
+def test_gui_1(p_field, car, checkpoints, to_show, debug):
     window = create_test_1_window()
     canvas = window["-CANVAS-"].TKCanvas
 
@@ -82,7 +82,7 @@ def test_gui_1(p_field, car, to_show, debug):
             last_redraw = millis()
             for item in to_show:
                 item._show(canvas)
-            window["-TEXT-"].update(f"calc_time: {calc_time}, draw_time: {draw_time}, car_speed: {round(car.speed*3.6, 2)}")
+            window["-TEXT-"].update(f"calc_time: {calc_time}, draw_time: {draw_time}, car_speed: {round(car.speed*3.6, 2)}, score: {round(checkpoints.get_car_score(0), 2)}")
             draw_time = millis() - last_redraw
 
     window.close()

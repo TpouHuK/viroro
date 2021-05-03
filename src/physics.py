@@ -26,8 +26,8 @@ class PGObject():
 
     def _cls(self, canvas):
         """Remove object from a tkinter canvas."""
-        for line in self.on_screen:
-            canvas.delete(line)
+        for item in self.on_screen:
+            canvas.delete(item)
         self.on_screen = []
 
 
@@ -206,8 +206,13 @@ class Car(PGObject):
         self.motor_power = power/100
 
     @property
+    def position(self):
+        """Center of a car in pymunk world cords."""
+        return self.body.position
+
+    @property
     def speed(self):
-        """Speed in pymunk units"""
+        """Speed in pymunk units."""
         return abs(self.body.velocity)
 
     def get_sensor_values(self):
@@ -239,6 +244,20 @@ class Car(PGObject):
         for line in self._lines_to_draw():
             p1, p2 = line
             self.on_screen.append(canvas.create_line(*p1, *p2))
+
+        SIZE = 4
+        p = self.body.position
+        p = cs.m_to_pd(p)
+        a = canvas.create_line(
+                p-Vec2d(0, SIZE), p+Vec2d(0, SIZE),
+                fill="#db91c5", width=2
+                )
+        b = canvas.create_line(
+                p-Vec2d(SIZE, 0), p+Vec2d(SIZE, 0),
+                fill="#db91c5", width=2
+                )
+        self.on_screen.append(a)
+        self.on_screen.append(b)
 
     def _lines_to_draw(self):
         verts = []
@@ -402,3 +421,94 @@ class PymunkField():
                 item._upd()
             self.space.step(cs.MICROSTEP_SIZE)
 
+
+
+class CheckPoints(PGObject):
+    def __init__(self, checkpoints, detection_radius):
+        """CheckPoints.
+
+        checkpoints - list of pymunk world points [(0, 0), (0, 1), ...]
+        """
+        self.f_on_screen = []
+        self.on_screen = []
+        self._to_space = []
+        
+        self.checkpoints = [Vec2d(*p) for p in checkpoints]
+        self.distances = [
+            self.checkpoints[i].get_distance(self.checkpoints[i-1])
+            for i in range(len(self.checkpoints))]
+
+        self.cars = []
+        self.car_checkpoint = []
+        self.car_score = []
+        self.detection_radius = detection_radius
+        self.rad2 = detection_radius**2
+
+    def add_car(self, car):
+        self.cars.append(car)
+        self.car_checkpoint.append(0)
+        self.car_score.append(0)
+
+    def get_car_score(self, idx):
+        cur_cp = self.car_checkpoint[idx]
+        nxt = self.checkpoints[cur_cp]
+
+        dist_to_next = self.cars[idx].position.get_distance(
+                self.checkpoints[cur_cp])
+
+        diff = self.distances[cur_cp] - dist_to_next
+        return self.car_score[idx] + diff
+
+    def _upd(self):
+        for num, car in enumerate(self.cars):
+            cur_cp = self.car_checkpoint[num]
+            car_pos = car.position
+            nxt = self.checkpoints[cur_cp]
+            #prv1 = self.checkpoints[(cur_cp-1)%len(self.checkpoints)]
+            prv2 = self.checkpoints[(cur_cp-2)%len(self.checkpoints)]
+            
+            if car_pos.get_dist_sqrd(prv2) < self.rad2:
+                self.car_checkpoint[num] -= 1
+                self.car_checkpoint[num] %= len(self.checkpoints)
+                self.car_score[num] -= self.distances[cur_cp-1]
+
+            if car_pos.get_dist_sqrd(nxt) < self.rad2:
+                self.car_score[num] += self.distances[cur_cp]
+                self.car_checkpoint[num] += 1
+                self.car_checkpoint[num] %= len(self.checkpoints)
+
+    def _show(self, canvas):
+        SIZE = 4
+        self._cls(canvas, full=False)
+        if not self.f_on_screen:
+            for p in self.checkpoints:
+                p = cs.m_to_pd(p)
+                a = canvas.create_line(
+                        p-Vec2d(0, SIZE), p+Vec2d(0, SIZE),
+                        fill="#9ede92", width=2
+                        )
+                b = canvas.create_line(
+                        p-Vec2d(SIZE, 0), p+Vec2d(SIZE, 0),
+                        fill="#9ede92", width=2
+                        )
+                c = draw_circle(
+                        canvas, p, cs.m_to_p(self.detection_radius))
+                self.f_on_screen.append(a)
+                self.f_on_screen.append(b)
+                self.f_on_screen.append(c)
+
+        for num, car in enumerate(self.cars):
+            p1 = cs.m_to_pd(car.position)
+            p2 = cs.m_to_pd(
+                    self.checkpoints[self.car_checkpoint[num]]
+                    )
+            a = canvas.create_line(p1, p2, fill="#a880ff")
+            self.on_screen.append(a)
+
+    def _cls(self, canvas, full=True):
+        for item in self.on_screen:
+            canvas.delete(item)
+        if full:
+            for item in self.f_on_screen:
+                canvas.delete(item)
+        self.on_screen = []
