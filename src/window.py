@@ -25,7 +25,7 @@ def create_test_1_window():
             sg.Button("One step", key="-STEP-", size=(6, 1))
         ],
         [
-            sg.Text("TESTING IN PROGRESS", key="-TEXT-", size=(50, 2))
+            sg.Text("TESTING IN PROGRESS", key="-TEXT-", size=(100, 2))
         ],
         [
             sg.Graph(

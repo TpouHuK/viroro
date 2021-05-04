@@ -188,6 +188,17 @@ class Car(PGObject):
             self.sensors.append(sens)
             self._to_space.extend(sens._to_space)
 
+    def remove(self, canvas):
+        """Remove object from a tkinter canvas."""
+        for item in self.on_screen:
+            canvas.delete(item)
+        self.on_screen = []
+        for wheel in self._wheels:
+            wheel._cls(canvas)
+        self._wheels = []
+        for sensor in self.sensors:
+            sensor._cls(canvas)
+        self.sensors = []
 
     def steer(self, deg):
         """Set angle of front wheels in degrees.
@@ -218,6 +229,12 @@ class Car(PGObject):
     def get_sensor_values(self):
         """Return list of floats, representing value of each sensor."""
         return [sensor.read_distance() for sensor in self.sensors]
+
+    def get_reward(self):
+        return 10
+
+    def get_alive(self):
+        return True
 
     def _upd(self):
         #fixme, speed should be taken from wheels not from the car
