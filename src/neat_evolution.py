@@ -5,7 +5,7 @@ from multiprocessing import Pool
 import itertools
 
 
-RUN_TICKS = 10
+RUN_TICKS = 200
 
 
 def _eval_genome(genome, config):
@@ -51,6 +51,7 @@ class EvolutionChamber():
         self.population.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         self.population.add_reporter(stats)
+        self.config = config
 
     def run(self, amount_of_generations):
         self.population.run(_eval_fitness, amount_of_generations)
@@ -58,8 +59,9 @@ class EvolutionChamber():
     def get_control_function(self, genome):
         net = neat.nn.FeedForwardNetwork.create(genome, self.config)
         def control(sensor_values):
-            output = net.activate(car.get_sensor_values())
+            output = net.activate(sensor_values)
             return output
+        return control
 
 if __name__ == "__main__":
     EvolutionChamber().run(10)

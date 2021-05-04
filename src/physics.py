@@ -188,17 +188,15 @@ class Car(PGObject):
             self.sensors.append(sens)
             self._to_space.extend(sens._to_space)
 
-    def remove(self, canvas):
+    def _cls(self, canvas):
         """Remove object from a tkinter canvas."""
         for item in self.on_screen:
             canvas.delete(item)
         self.on_screen = []
         for wheel in self._wheels:
             wheel._cls(canvas)
-        self._wheels = []
         for sensor in self.sensors:
             sensor._cls(canvas)
-        self.sensors = []
 
     def steer(self, deg):
         """Set angle of front wheels in degrees.
@@ -251,13 +249,13 @@ class Car(PGObject):
             wheel.body.apply_force_at_local_point((0, wheel_force))
 
     def _show(self, canvas):
+        self._cls(canvas)
         for sensor in self.sensors:
             sensor._show(canvas)
 
         for wheel in self._wheels:
             wheel._show(canvas)
 
-        self._cls(canvas)
         for line in self._lines_to_draw():
             p1, p2 = line
             self.on_screen.append(canvas.create_line(*p1, *p2))
