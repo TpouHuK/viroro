@@ -40,7 +40,7 @@ def car_1(position, group):
         "max_steer_angle": 45,
         "max_speed": 6,
         "max_power": 60 * 1.4,
-        "hull_friction": 0.1,
+        "hull_friction": 0.8,
         "sensors": sensors,
     }
     return ph.Car(car_props, position, group)

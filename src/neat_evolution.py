@@ -5,7 +5,7 @@ from multiprocessing import Pool
 import itertools
 
 
-RUN_TICKS = 60
+RUN_TICKS = 600
 
 
 def _eval_genome(genome, config):
@@ -17,8 +17,11 @@ def _eval_genome(genome, config):
     checkpoints.add_car(car)
     p_field.add(car, walls, checkpoints)
     net = neat.nn.FeedForwardNetwork.create(genome, config)
+    last_sensors = [0]*6
     for _ in range(RUN_TICKS):
-        output = net.activate(car.get_sensor_values())
+        sensors = car.get_sensor_values()
+        output = net.activate(sensors + last_sensors)
+        last_sensors = sensors
         car.steer(round(output[0]*30))
         car.push(round(output[1]*100))
         p_field.step()
