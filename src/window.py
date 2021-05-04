@@ -116,14 +116,18 @@ def create_evolution_window():
     return window
 
 
-
-
 def evolution_gui(tcomm):
     window = create_evolution_window()
     canvas = window["-CANVAS-"].TKCanvas
 
+    global last_values
+    last_values = [0]*6
+
     def step(control_fn):
-        a, b = control_fn(car.get_sensor_values())
+        global last_values
+        sensor_values = car.get_sensor_values()
+        a, b = control_fn(sensor_values + last_values)
+        last_values = sensor_values
         car.steer(a*30)
         car.push(b*100)
         p_field.step()
