@@ -106,9 +106,8 @@ def run_car(genomes, config):
                 # Input my data and get result from network
                 for index, car in list(cars.items()):
                     output = nets[crutch[index]].activate(car.get_sensor_values())
-                    i = output.index(max(output))
-                    car.steer(i-30)
-                    car.push(40)
+                    car.steer(round(output[0]*30))
+                    car.push(round(output[1]*100))
 
                 # Update car and fitness
                 score = []
