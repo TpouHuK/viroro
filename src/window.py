@@ -158,7 +158,7 @@ def evolution_gui(tcomm):
                     tcomm.eval_chamber.population.best_genome
                     )
             p_field = physics.PymunkField()
-            car = test_items.car_1((0.5, 2.5), group=1)
+            car = test_items.car_1((0.5, 3.5), group=1)
             walls = test_items.walls_2()
 
             p_field.add(car, walls)
