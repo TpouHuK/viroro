@@ -88,3 +88,21 @@ def walls_2():
             ((1, 3), (8, 3)),
             ]
     return ph.Walls(walls, thickness=0.01, elasticity=0.999)
+
+
+def checkpoints_2():
+    return ph.CheckPoints(
+        [
+            (0.5, 2.5),
+            (1.5, 0.5),
+            (2.5, 1.5),
+            (3.5, 2.5),
+            (4.5, 1.5),
+            (5.5, 0.5),
+            (6.5, 1.5),
+            (7.5, 2.5),
+            (8.5, 3.0),
+            (7.5, 3.5),
+            (1.5, 3.5),
+        ],
+        detection_radius=0.5)
