@@ -11,6 +11,7 @@ pymunk = "*"
 neat-python = "*"
 pytomlpp = "*"
 pytest = "*"
+viroro = {editable = true,path = "."}
 
 [requires]
 python_version = "3.8"

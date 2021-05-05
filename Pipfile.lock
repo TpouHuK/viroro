@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ed32566aa4c4b950a9f8482f92fdd1b324cf5a744ac3bc459b03fc50557d5058"
+            "sha256": "16ed5d5dc070738011499f7cc6719ee8ac55b8722cd4b0e84f54d87926ad90b7"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -206,6 +206,10 @@
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
             "version": "==0.10.2"
+        },
+        "viroro": {
+            "editable": true,
+            "path": "."
         }
     },
     "develop": {}
