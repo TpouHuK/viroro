@@ -9,7 +9,7 @@ verify_ssl = true
 pysimplegui = "*"
 pymunk = "*"
 neat-python = "*"
-toml = "*"
+pytomlpp = "*"
 
 [requires]
 python_version = "3.8"
