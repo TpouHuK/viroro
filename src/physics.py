@@ -42,23 +42,24 @@ class DistanceSensor(PGObject):
     """Distance sensor that simulates IR/US sensor.
 
     body -- pymunk.Body() to attach sensor to
-    v_offest -- TODO
-    h_offset -- TODO
-    angle -- TODO
-    distance -- maximum measurement distance
-    width -- width of a beam
+    x -- x position from (0, 0) of car
+    y -- y position from (0, 0) of car
+    angle -- beam angle, -90=LEFT, 0=UP, 90=RIGHT
+    range_ -- maximum measurement distance
+    beam_width -- width of a beam
     shape_filter -- pymunk.ShapeFilter that is applied to a shape
     """
     def __init__(
-            self, body, v_offset, h_offset, angle, distance, width,
+            self, body, x, y, angle, range_, beam_width,
             shape_filter):
         self.on_screen = []
         self._to_space = []
-        self._distance = distance
+        self._range_ = range_
 
-        start = Vec2d(h_offset, -v_offset)
-        finish = start + Vec2d(0, -distance).rotated(radians(angle))
-        self._shape = pymunk.Segment(body, start, finish, width)
+        start = Vec2d(x, -y)
+        finish = start + Vec2d(0, -range_).rotated(radians(angle))
+
+        self._shape = pymunk.Segment(body, start, finish, beam_width)
         self._shape.sensor = True
         self._shape.filter = shape_filter
         self._to_space = [self._shape]
@@ -80,7 +81,7 @@ class DistanceSensor(PGObject):
                 p1, p2, self._shape.radius,
                 self._shape.filter)
         if q:
-            return q.alpha * self._distance
+            return q.alpha * self._range_
         return float("inf")
 
     def _world_cords(self):
@@ -112,55 +113,61 @@ class DistanceSensor(PGObject):
 class Car(PGObject):
     """Car object with wheels and ??? FIXME"""
 
-    def __init__(self, props, position, group=1):
+    def __init__(self, config, position, group=1):
         """Create a car.
 
-        props -- car properties, big dictionary, big mess
+        config -- car properties, big dictionary, big mess
         position -- position in pymunk world coords
         group -- car collision group, every car should 
         """
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
-        self.algo = None
+
         shape_filter = pymunk.ShapeFilter(group)
-
         position = Vec2d(*position)
-        tw = props["tw"]
-        th = props["th"]
-        bw = props["bw"]
-        bh = props["bh"]
-        w_props = (props["wheel_radius"],
-            props["wheel_width"],
-            props["wheel_mass"],
-            props["wheel_slipforce"],
-            props["wheel_friction_force"],
-            props["wheel_side_friction"],
-            props["wheel_weird_forward_friction"])
 
-        t_w_l = Wheel(*w_props, position + Vec2d(-tw, -th), shape_filter)
-        t_w_r = Wheel(*w_props, position + Vec2d(+tw, -th), shape_filter)
-        b_w_l = Wheel(*w_props, position + Vec2d(-bw, +bh), shape_filter)
-        b_w_r = Wheel(*w_props, position + Vec2d(+bw, +bh), shape_filter)
-        self._wheels = [t_w_l, t_w_r, b_w_l, b_w_r]
-        for w in self._wheels:
-            self._to_space.extend(w._to_space)
+        tw = config["front_wheels_x"]
+        th = config["front_wheels_y"]
+        bw = config["back_wheels_x"]
+        bh = config["back_wheels_y"]
+        wheel_c = (
+            config["wheel_radius"],
+            config["wheel_width"],
+            config["wheel_mass"],
+            config["wheel_slipforce"],
+            config["wheel_friction_force"],
+            config["wheel_side_friction"],
+            config["wheel_weird_forward_friction"])
+        self._wheels = [
+            Wheel(*wheel_c, position + Vec2d(-tw, -th), shape_filter),
+            Wheel(*wheel_c, position + Vec2d(+tw, -th), shape_filter),
+            Wheel(*wheel_c, position + Vec2d(-bw, +bh), shape_filter),
+            Wheel(*wheel_c, position + Vec2d(+bw, +bh), shape_filter),
+            ]
+        for wheel in self._wheels:
+            self._to_space.extend(wheel._to_space)
 
-        self.width = props["car_width"]
-        self.height = props["car_height"]
-        self.mass = props["car_mass"]
-        
-        self.max_steer_angle = props["max_steer_angle"]
-        self.max_speed = props["max_speed"]
-        self.max_power = props["max_power"]
+        self.width = config["car_width"]
+        self.height = config["car_height"]
+        self.mass = config["car_mass"]
+        self.max_steer_angle = config["max_steer_angle"]
+        self.max_speed = config["max_speed"]
+        self.max_power = config["max_power"]
 
         moment = pymunk.moment_for_box(self.mass, (self.width, self.height))
         self.body = pymunk.Body(self.mass, moment)
         self.body.position = position
         w, h = self.width, self.height
         self.shape = pymunk.Poly(
-            self.body, [(-w/2, -h), (w/2, -h), (w/2, h), (-w/2, h)])
-        self.shape.friction = props["hull_friction"]
+            self.body,
+            [
+                (-self.width/2, -self.height),
+                (self.width/2, -self.height),
+                (self.width/2, self.height),
+                (-self.width/2, self.height)
+                ])
+        self.shape.friction = config["hull_friction"]
         self.shape.filter = shape_filter
         self._to_space.extend((self.body, self.shape))
 
@@ -175,15 +182,18 @@ class Car(PGObject):
             c2.error_bias = 0.00001
             self._to_space.extend((c1, c2))
             return c2
-        glue(b_w_l.body, self.body)
-        glue(b_w_r.body, self.body)
-        self.lw_gearjoint = glue(t_w_l.body, self.body)
-        self.rw_gearjoint = glue(t_w_r.body, self.body)
+
+        self.lw_gearjoint = glue(self._wheels[0].body, self.body)
+        self.rw_gearjoint = glue(self._wheels[1].body, self.body)
+        glue(self._wheels[2].body, self.body)
+        glue(self._wheels[3].body, self.body)
 
         self.sensors = []
-        for s_props in props['sensors']:
+        for sensor_config in config["sensors"]:
+            sensor_config["range_"] = sensor_config["range"]
+            del sensor_config["range"]
             sens = DistanceSensor(
-                self.body, **s_props,
+                self.body, **sensor_config,
                 shape_filter=shape_filter)
             self.sensors.append(sens)
             self._to_space.extend(sens._to_space)
