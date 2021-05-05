@@ -1,7 +1,14 @@
 from math import copysign, radians, sqrt
 import pymunk
 from pymunk.vec2d import Vec2d
-import constants as cs
+
+class Test():
+    def __init__(self):
+        pass
+
+cs = Test()
+cs.m_to_pd = NotImplemented
+cs.m_to_p = NotImplemented
 
 
 class PGObject():
