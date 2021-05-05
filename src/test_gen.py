@@ -3,8 +3,6 @@ import neat_evolution
 import threading
 from time import sleep
 
-# hello world
-eval_chamber = neat_evolution.EvolutionChamber()
 
 class ThreadCommunication():
     def __init__(self):
@@ -19,7 +17,7 @@ def thread1(tcomm):
 
 
 def thread2(tcomm):
-    tcomm.eval_chamber = eval_chamber
+    tcomm.eval_chamber = neat_evolution.EvolutionChamber()
     while True:
         tcomm.evolving.wait()
         while tcomm.evolving.is_set():
