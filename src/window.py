@@ -128,7 +128,7 @@ def evolution_gui(tcomm):
         sensor_values = car.get_sensor_values()
         a, b = control_fn(sensor_values + last_values)
         last_values = sensor_values
-        car.steer(a*30)
+        car.steer(a*45)
         car.push(b*100)
         p_field.step()
 

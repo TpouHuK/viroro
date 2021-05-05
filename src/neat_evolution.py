@@ -22,7 +22,7 @@ def _eval_genome(genome, config):
         sensors = car.get_sensor_values()
         output = net.activate(sensors + last_sensors)
         last_sensors = sensors
-        car.steer(round(output[0]*30))
+        car.steer(round(output[0]*45))
         car.push(round(output[1]*100))
         p_field.step()
     return checkpoints.get_car_score(idx=0)
