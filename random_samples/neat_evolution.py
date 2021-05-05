@@ -1,9 +1,13 @@
+# REWRITE ME:
+# STATUS: GARBAGE
+# TOO MUCH OF HARDCODED THINGS
+# TYVM FOR TEST_ITEMS
+
 import neat
 import physics
 from test_items import car_1, walls_2, checkpoints_2
 from multiprocessing import Pool
 import itertools
-
 
 RUN_TICKS = 600
 

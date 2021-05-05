@@ -1,3 +1,6 @@
+# REWRITE ME
+# STATUS: GARBAGE
+
 import PySimpleGUI as sg
 import time
 import constants as cs

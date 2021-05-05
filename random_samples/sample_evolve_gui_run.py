@@ -1,3 +1,6 @@
+# REWRITE ME
+# STATUS: GARBAGE
+
 from window import evolution_gui
 import neat_evolution
 import threading
