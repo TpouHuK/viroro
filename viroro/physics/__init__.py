@@ -1,1 +1,1 @@
-from . import physics
+from .physics import *

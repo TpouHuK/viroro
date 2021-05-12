@@ -8,11 +8,11 @@ class DrawOptions():
         self.offset = offset
         self.zoom = zoom
 
-    def scale_screen(v):
-        return v * zoom
+    def scale_screen(self, v):
+        return v * self.zoom
 
-    def to_screen():
-        return v * zoom + offset
+    def to_screen(self, v):
+        return v * self.zoom + self.offset
 
 
 class PGObject():
