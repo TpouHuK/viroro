@@ -557,3 +557,7 @@ class CheckPoints(PGObject):
             for item in self.f_on_screen:
                 canvas.delete(item)
         self.on_screen = []
+
+
+class Field(PGObject):
+    pass
