@@ -2,6 +2,7 @@ from math import copysign, radians, sqrt
 import pymunk
 from pymunk.vec2d import Vec2d
 
+
 class DrawOptions():
     def __init__(self, canvas, zoom, offset=Vec2d(0, 0)):
         self.canvas = canvas
@@ -107,7 +108,7 @@ class DistanceSensor(PGObject):
         canvas = draw_options.canvas
         body = self._shape.body
         p1, p2 = self._world_cords()
-        p1 = cs.m_to_pd(p1)
+        p1 = draw_options.to_screen(p1)
 
         self.cls(draw_options)
         self.on_screen = []
@@ -126,13 +127,15 @@ class DistanceSensor(PGObject):
 class Car(PGObject):
     """Car object with wheels and ??? FIXME"""
 
-    def __init__(self, config, position, group=1):
+    def __init__(self, config, group=1):
         """Create a car.
 
         config -- car properties, big dictionary, big mess
         position -- position in pymunk world coords
         group -- car collision group, every car should 
         """
+        position = config["position"]
+
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
@@ -203,8 +206,6 @@ class Car(PGObject):
 
         self.sensors = []
         for sensor_config in config["sensors"]:
-            sensor_config["range_"] = sensor_config["range"]
-            del sensor_config["range"]
             sens = DistanceSensor(
                 self.body, **sensor_config,
                 shape_filter=shape_filter)
@@ -269,12 +270,12 @@ class Car(PGObject):
 
     def show(self, draw_options):
         canvas = draw_options.canvas
-        self.cls(canvas)
+        self.cls(draw_options)
         for sensor in self.sensors:
-            sensor._show(canvas)
+            sensor.show(draw_options)
 
         for wheel in self._wheels:
-            wheel._show(canvas)
+            wheel.show(draw_options)
 
         for line in self._lines_to_draw():
             p1, p2 = line
@@ -284,7 +285,7 @@ class Car(PGObject):
 
         SIZE = 4
         p = self.body.position
-        p = draw_option.to_screen(p)
+        p = draw_options.to_screen(p)
         a = canvas.create_line(
                 p-Vec2d(0, SIZE), p+Vec2d(0, SIZE),
                 fill="#db91c5", width=2
@@ -434,14 +435,13 @@ class Walls(PGObject):
             self.s_walls.append(collision_shape)
 
     def show(self, draw_options):
-        if self.on_screen:
-            return
-        canvas = draw_options
+        self.cls(draw_options)
+        canvas = draw_options.canvas
         for shape in self.s_walls:
             self.on_screen.append(
                     canvas.create_line(
-                        *cs.m_to_pd(shape.a),
-                        *cs.m_to_pd(shape.b),
+                        *draw_options.to_screen(shape.a),
+                        *draw_options.to_screen(shape.b),
                         fill="black", width=3))
 
 
@@ -473,7 +473,6 @@ class CheckPoints(PGObject):
 
         checkpoints - list of pymunk world points [(0, 0), (0, 1), ...]
         """
-        self.f_on_screen = []
         self.on_screen = []
         self._to_space = []
         
@@ -521,26 +520,25 @@ class CheckPoints(PGObject):
                 self.car_checkpoint[num] %= len(self.checkpoints)
 
     def show(self, draw_options):
-        canvas = draw_options
+        canvas = draw_options.canvas
         CROSS_SIZE = 4
         self.cls(draw_options, full=False)
-        if not self.f_on_screen:
-            for p in self.checkpoints:
-                p = draw_options.to_screen(p)
-                a = canvas.create_line(
-                        p-Vec2d(0, CROSS_SIZE), p+Vec2d(0, CROSS_SIZE),
-                        fill="#9ede92", width=2
-                        )
-                b = canvas.create_line(
-                        p-Vec2d(CROSS_SIZE, 0), p+Vec2d(CROSS_SIZE, 0),
-                        fill="#9ede92", width=2
-                        )
-                c = draw_circle(
-                        canvas, p,
-                        draw_options.scale_screen(self.detection_radius))
-                self.f_on_screen.append(a)
-                self.f_on_screen.append(b)
-                self.f_on_screen.append(c)
+        for p in self.checkpoints:
+            p = draw_options.to_screen(p)
+            a = canvas.create_line(
+                    p-Vec2d(0, CROSS_SIZE), p+Vec2d(0, CROSS_SIZE),
+                    fill="#9ede92", width=2
+                    )
+            b = canvas.create_line(
+                    p-Vec2d(CROSS_SIZE, 0), p+Vec2d(CROSS_SIZE, 0),
+                    fill="#9ede92", width=2
+                    )
+            c = draw_circle(
+                    canvas, p,
+                    draw_options.scale_screen(self.detection_radius))
+            self.on_screen.append(a)
+            self.on_screen.append(b)
+            self.on_screen.append(c)
 
         for num, car in enumerate(self.cars):
             p1 = draw_options.to_screen(car.position)
@@ -551,6 +549,7 @@ class CheckPoints(PGObject):
             self.on_screen.append(a)
 
     def cls(self, draw_options, full=True):
+        canvas = draw_options.canvas
         for item in self.on_screen:
             canvas.delete(item)
         if full:
@@ -560,4 +559,52 @@ class CheckPoints(PGObject):
 
 
 class Field(PGObject):
-    pass
+    def __init__(self, config):
+        self.config = config
+        car = Car(config["car"])
+        walls = Walls(**config["walls"])
+        checkpoints = CheckPoints(**config["checkpoints"])
+        checkpoints.add_car(car)
+
+        self.car = car
+        self.checkpoints = checkpoints
+        self.pm_field = PymunkField(**config["pymunk_field"])
+        self.pm_field.add(car, walls, checkpoints)
+
+        self.to_show = [car, walls, checkpoints]
+        self.algo = None
+
+    def show(self, draw_options):
+        for item in self.to_show:
+            item.show(draw_options)
+
+    def cls(self, draw_options):
+        for item in self.to_show:
+            item.cls(draw_options)
+
+    def step(self):
+        if self.algo:
+            inp = self.car.get_sensor_values()
+            out = self.algo(inp)
+            angle = out[0] * self.car.max_steer_angle
+            throttle = out[1] * 100
+            self.car.steer(angle)
+            self.car.push(throttle)
+        self.pm_field.step()
+
+    def score(self):
+        return self.checkpoints.get_car_score(0)
+
+    def reset(self):
+        config = self.config
+        car = Car(config["car"])
+        walls = Walls(**config["walls"])
+        checkpoints = CheckPoints(**config["checkpoints"])
+        checkpoints.add_car(car)
+
+        self.car = car
+        self.checkpoints = checkpoints
+        self.pm_field = PymunkField(**config["pymunk_field"])
+        self.pm_field.add(car, walls, checkpoints)
+
+        self.to_show = [car, walls, checkpoints]
