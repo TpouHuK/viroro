@@ -185,7 +185,6 @@ def main(population, config):
 
         # Evolving
         if evolving_population and not evolving_thread.is_alive():
-            print("DOIT")
             evolving_thread = threading.Thread(target=calc_thread, args=(population,), daemon=True)
             evolving_thread.start()
             gen_start = millis()
@@ -209,13 +208,10 @@ def main(population, config):
             if values["-VIS_MODE_FULL-"]:
                 if not cur_frame_ready.is_set():
                     with cur_frame_lock:
-                        print(cur_frame)
                         if cur_frame:
                             cur_frame[0].show(viewport)
-                            print("WHAT")
                             for field in cur_frame[1:]:
                                 field.car.show(viewport)
-                            print("WHAT")
                         else:
                             viewport.canvas.delete("all")
                         cur_frame_ready.set()
