@@ -1,8 +1,0 @@
-import viroro.physics as ph
-from pymunk import Vec2d
-
-v_one = Vec2d(1, 1)
-
-def test_drawoptions():
-    do = ph.DrawOptions(canvas=None, zoom=1)
-    do.scale_screen(v_one)

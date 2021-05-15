@@ -16,3 +16,8 @@ def test_distance_sensor():
             x=0, y=0, angle=0, range_=0, 
             beam_width=0, shape_filter=pymunk.ShapeFilter())
 
+
+def test_drawoptions():
+    v_one = Vec2d(1, 1)
+    do = ph.DrawOptions(canvas=None, zoom=1)
+    do.scale_screen(v_one)
