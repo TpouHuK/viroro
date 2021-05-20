@@ -12,6 +12,7 @@ neat-python = "*"
 pytomlpp = "*"
 pytest = "*"
 viroro = {editable = true,path = "."}
+pynput = "*"
 
 [requires]
 python_version = "3.8"
