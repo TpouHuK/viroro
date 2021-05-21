@@ -558,6 +558,24 @@ class CheckPoints(PGObject):
         self.on_screen = []
 
 
+class CheckPoints2(PGObject):
+    def __init__(self, checkpoints, car):
+        self.checkpoints = checkpoints
+        pass
+
+    def score(self):
+        pass
+
+    def _upd(self):
+        pass
+
+    def show(self, draw_options):
+        pass
+
+    def cls(self, draw_options):
+        pass
+
+
 class Field(PGObject):
     def __init__(self, config):
         self.config = config
