@@ -1,6 +1,6 @@
 [pymunk_field]
 dt = 0.016666666 # 60 fps
-microsteps = 70
+microsteps = 130
 
 [car]
 position = [0.5, 3.5]

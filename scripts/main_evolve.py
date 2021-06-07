@@ -12,7 +12,7 @@ import viroro.physics as ph
 
 FRAME_TIME = 1/60 * 1000
 FIELD_CONFIG = pytomlpp.load(open("items.toml"))
-FIELD_STEPS = 100
+FIELD_STEPS = 1000
 
 
 def millis():
