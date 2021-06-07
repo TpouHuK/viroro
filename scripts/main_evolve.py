@@ -11,7 +11,7 @@ import viroro.physics as ph
 
 
 FRAME_TIME = 1/60 * 1000
-FIELD_CONFIG = pytomlpp.load(open("items.toml"))
+FIELD_CONFIG = pytomlpp.load(open("small_car_items.toml"))
 FIELD_STEPS = 1000
 
 
@@ -152,7 +152,7 @@ def main(population, config):
     viewport_items = []
     evolving_population = False
 
-    best_field = ph.Field(pytomlpp.load(open("items.toml")))
+    best_field = ph.Field(FIELD_CONFIG)
     best_field.algo = lambda x: (30, -50)
 
     evolving_thread = threading.Thread(target=calc_thread, args=(), daemon=True)
