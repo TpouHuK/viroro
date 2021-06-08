@@ -3,52 +3,9 @@ import pymunk
 from pymunk.vec2d import Vec2d
 
 
-class DrawOptions():
-    def __init__(self, canvas, zoom, offset=Vec2d(0, 0)):
-        self.canvas = canvas
-        self.offset = offset
-        self.zoom = zoom
-
-    def scale_screen(self, v):
-        return v * self.zoom
-
-    def to_screen(self, v):
-        return v * self.zoom + self.offset
-
-
 class PGObject():
-    """Base class for all physical objects.
-    
-    PGObject stands for Physics and Graphics object.
-    They should provide following properties/functions:
-    
-    self.show(draw_options) -- function that draws object using draw_options
-    self.cls(draw_options) -- function that removes object using draw_options
-
-    self._upd() -- function that is called before every simulation tick
-    self._to_space -- list of items that are added to pymunk.Space
-    """
     def _upd(self):
-        """Called every simulation tick."""
         pass
-
-    def show(self, draw_options):
-        """Draw object on a tkinter canvas."""
-        pass
-
-    def cls(self, draw_options):
-        """Remove object from a tkinter canvas."""
-        canvas = draw_options.canvas
-        for item in self.on_screen:
-            canvas.delete(item)
-        self.on_screen = []
-
-
-def draw_circle(canvas, point, radius, *args, **kwargs):
-    """Draw circle on tkinter canvas."""
-    return canvas.create_oval(
-            point.x - radius, point.y - radius,
-    point.x + radius, point.y + radius, *args, **kwargs)
 
 
 class DistanceSensor(PGObject):
@@ -65,8 +22,6 @@ class DistanceSensor(PGObject):
     def __init__(
             self, body, x, y, angle, range_, beam_width,
             shape_filter):
-        self.on_screen = []
-        self._to_space = []
         self._range_ = range_
 
         start = Vec2d(x, -y)
@@ -103,25 +58,6 @@ class DistanceSensor(PGObject):
         p1 = self._shape.a.rotated(body.angle) + body.position
         p2 = self._shape.b.rotated(body.angle) + body.position
         return (p1, p2)
-
-    def show(self, draw_options):
-        canvas = draw_options.canvas
-        body = self._shape.body
-        p1, p2 = self._world_cords()
-        p1 = draw_options.to_screen(p1)
-
-        self.cls(draw_options)
-        self.on_screen = []
-        point = self.get_collision_point()
-        if point:
-            point = draw_options.to_screen(point)
-            p2 = point
-            self.on_screen.append(canvas.create_line(*p1, *p2, fill="#5cffff"))
-            self.on_screen.append(draw_circle(
-                canvas, point, radius=3, fill="#ff5cef", width=1))
-        else:
-            p2 = draw_options.to_screen(p2)
-            self.on_screen.append(canvas.create_line(*p1, *p2, fill="#5cffff"))
 
 
 class Car(PGObject):
@@ -268,46 +204,6 @@ class Car(PGObject):
         lines.append((verts[-1], verts[0]))
         return lines
 
-    def show(self, draw_options):
-        canvas = draw_options.canvas
-        self.cls(draw_options)
-        for sensor in self.sensors:
-            sensor.show(draw_options)
-
-        for wheel in self._wheels:
-            wheel.show(draw_options)
-
-        for line in self._lines_to_draw():
-            p1, p2 = line
-            p1 = draw_options.to_screen(p1)
-            p2 = draw_options.to_screen(p2)
-            self.on_screen.append(canvas.create_line(*p1, *p2))
-
-        SIZE = 4
-        p = self.body.position
-        p = draw_options.to_screen(p)
-        a = canvas.create_line(
-                p-Vec2d(0, SIZE), p+Vec2d(0, SIZE),
-                fill="#db91c5", width=2
-                )
-        b = canvas.create_line(
-                p-Vec2d(SIZE, 0), p+Vec2d(SIZE, 0),
-                fill="#db91c5", width=2
-                )
-        self.on_screen.append(a)
-        self.on_screen.append(b)
-
-    def cls(self, draw_options):
-        """Remove object from a tkinter canvas."""
-        canvas = draw_options.canvas
-        for item in self.on_screen:
-            canvas.delete(item)
-        self.on_screen = []
-        for wheel in self._wheels:
-            wheel.cls(draw_options)
-        for sensor in self.sensors:
-            sensor.cls(draw_options)
-
 
 class Wheel(PGObject):
     def __init__(
@@ -358,7 +254,7 @@ class Wheel(PGObject):
         self._to_space = [self.body, self.shape]
         self.on_screen = []
 
-    def _lines_to_draw(self):
+    def _lines_to_draw(self): # move me to graphics uwu
         verts = []
         lines = []
         for v in self.shape.get_vertices():
@@ -369,15 +265,6 @@ class Wheel(PGObject):
             verts.append(world_cords)
         lines.append((verts[-1], verts[0]))
         return lines
-
-    def show(self, draw_options):
-        canvas = draw_options.canvas
-        self.cls(draw_options)
-        for line in self._lines_to_draw():
-            p1, p2 = line
-            p1 = draw_options.to_screen(p1)
-            p2 = draw_options.to_screen(p2)
-            self.on_screen.append(canvas.create_line(*p1, *p2))
 
 
 class Circle(PGObject):
@@ -400,15 +287,6 @@ class Circle(PGObject):
     def bump(self, force):
         """Apply impulse to circle."""
         self.shape.body.apply_impulse_at_local_point(force)
-
-    def show(self, draw_options):
-        canvas = draw_options.canvas
-        self.cls(draw_options)
-        pos = draw_options.to_screen(self.shape.body.position)
-        rad = draw_options.scale_screen(self.radius)
-        self.on_screen = [
-                canvas.create_oval(pos.x - rad, pos.y - rad,
-                pos.x + rad, pos.y + rad, fill="#63ff92", width=1)]
 
 
 class Walls(PGObject):
@@ -433,16 +311,6 @@ class Walls(PGObject):
             self._to_space.extend((body, collision_shape))
 
             self.s_walls.append(collision_shape)
-
-    def show(self, draw_options):
-        self.cls(draw_options)
-        canvas = draw_options.canvas
-        for shape in self.s_walls:
-            self.on_screen.append(
-                    canvas.create_line(
-                        *draw_options.to_screen(shape.a),
-                        *draw_options.to_screen(shape.b),
-                        fill="black", width=3))
 
 
 class PymunkField():
@@ -519,50 +387,13 @@ class CheckPoints(PGObject):
                 self.car_checkpoint[num] += 1
                 self.car_checkpoint[num] %= len(self.checkpoints)
 
-    def show(self, draw_options):
-        canvas = draw_options.canvas
-        CROSS_SIZE = 4
-        self.cls(draw_options, full=False)
-        for p in self.checkpoints:
-            p = draw_options.to_screen(p)
-            a = canvas.create_line(
-                    p-Vec2d(0, CROSS_SIZE), p+Vec2d(0, CROSS_SIZE),
-                    fill="#9ede92", width=2
-                    )
-            b = canvas.create_line(
-                    p-Vec2d(CROSS_SIZE, 0), p+Vec2d(CROSS_SIZE, 0),
-                    fill="#9ede92", width=2
-                    )
-            c = draw_circle(
-                    canvas, p,
-                    draw_options.scale_screen(self.detection_radius))
-            self.on_screen.append(a)
-            self.on_screen.append(b)
-            self.on_screen.append(c)
-
-        for num, car in enumerate(self.cars):
-            p1 = draw_options.to_screen(car.position)
-            p2 = draw_options.to_screen(
-                    self.checkpoints[self.car_checkpoint[num]]
-                    )
-            a = canvas.create_line(p1, p2, fill="#a880ff")
-            self.on_screen.append(a)
-
-    def cls(self, draw_options, full=True):
-        canvas = draw_options.canvas
-        for item in self.on_screen:
-            canvas.delete(item)
-        if full:
-            for item in self.f_on_screen:
-                canvas.delete(item)
-        self.on_screen = []
-
 
 class Field(PGObject):
     def __init__(self, config):
         self.config = config
         car = Car(config["car"])
         walls = Walls(**config["walls"])
+        self.walls = walls
         checkpoints = CheckPoints(**config["checkpoints"])
         checkpoints.add_car(car)
 
@@ -571,16 +402,7 @@ class Field(PGObject):
         self.pm_field = PymunkField(**config["pymunk_field"])
         self.pm_field.add(car, walls, checkpoints)
 
-        self.to_show = [car, walls, checkpoints]
         self.algo = None
-
-    def show(self, draw_options):
-        for item in self.to_show:
-            item.show(draw_options)
-
-    def cls(self, draw_options):
-        for item in self.to_show:
-            item.cls(draw_options)
 
     def step(self):
         if self.algo:
@@ -606,5 +428,3 @@ class Field(PGObject):
         self.checkpoints = checkpoints
         self.pm_field = PymunkField(**config["pymunk_field"])
         self.pm_field.add(car, walls, checkpoints)
-
-        self.to_show = [car, walls, checkpoints]
