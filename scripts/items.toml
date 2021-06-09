@@ -9,28 +9,28 @@ microsteps = 70
 position = [0.5, 3.5]
 sensors = [
 	{x = -0.06, y = 0.14, angle = -90, range_ = 0.8, beam_width = 0.001},
-	{x = -0.04, y = 0.14, angle = -45, range_ = 1.5, beam_width = 0.001},
+	{x = -0.04, y = 0.14, angle = 45, range_ = 1.5, beam_width = 0.001},
 	{x = 0.00, y = 0.14, angle = 0, range_ = 1, beam_width = 0.001},
-	{x = 0.04, y = 0.14, angle = 45, range_ = 1.5, beam_width = 0.001},
+	{x = 0.04, y = 0.14, angle = -45, range_ = 1.5, beam_width = 0.001},
 	{x = 0.06, y = 0.14, angle = 90, range_ = 0.8, beam_width = 0.001},
 ]
 
 wheel_radius = 0.035
-wheel_width = 0.020
+wheel_width = 0.030
 wheel_mass = 0.01
 wheel_slipforce = 60
 wheel_friction_force = 30
 wheel_side_friction = 0.5
 wheel_weird_forward_friction = 0.01
 
-front_wheels_x = 0.10
-front_wheels_y = 0.20
-back_wheels_x = 0.10
-back_wheels_y = 0.20
+front_wheels_x = 0.09
+front_wheels_y = 0.06
+back_wheels_x = 0.09
+back_wheels_y = 0.13
 
-car_width = 0.25
-car_height = 0.30
-car_mass = 1.4
+car_width = 0.21
+car_height = 0.32
+car_mass = 1.7
 max_steer_angle = 45
 max_speed = 6
 max_power = 84

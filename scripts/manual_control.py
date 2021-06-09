@@ -50,7 +50,7 @@ def main():
     sg.theme("Reddit")
     window = create_window()
     
-    viewport = ph.DrawOptions(window["-VIEWPORT-"].TKCanvas, 84, (5, 5))
+    viewport = ph.DrawOptions(window["-VIEWPORT-"].TKCanvas, 200, (5, 5))
     viewport_items = []
     evolving_population = False
 

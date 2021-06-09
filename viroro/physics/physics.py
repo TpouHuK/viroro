@@ -178,10 +178,10 @@ class Car(PGObject):
         self.shape = pymunk.Poly(
             self.body,
             [
-                (-self.width/2, -self.height),
-                (self.width/2, -self.height),
-                (self.width/2, self.height),
-                (-self.width/2, self.height)
+                (-self.width/2, -self.height/2),
+                (self.width/2, -self.height/2),
+                (self.width/2, self.height/2),
+                (-self.width/2, self.height/2)
                 ])
         self.shape.friction = config["hull_friction"]
         self.shape.filter = shape_filter
