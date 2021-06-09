@@ -1,16 +1,18 @@
+# 30cm - full turn
+# 45cm - half turn
 [pymunk_field]
-dt = 0.016666666 # 60 fps
+#dt = 0.016666666 # 60 fps
+dt = 0.005
 microsteps = 70
 
 [car]
 position = [0.5, 3.5]
 sensors = [
-	{x = -0.06, y = 0.14, angle = -90, range_ = 2, beam_width = 0.001},
-	{x = -0.05, y = 0.14, angle = 0, range_ = 2, beam_width = 0.001},
-	{x = -0.03, y = 0.14, angle = 45, range_ = 2, beam_width = 0.001},
-	{x = 0.03, y = 0.14, angle = -45, range_ = 2, beam_width = 0.001},
-	{x = 0.05, y = 0.14, angle = 0, range_ = 2, beam_width = 0.001},
-	{x = 0.06, y = 0.14, angle = 90, range_ = 2, beam_width = 0.001},
+	{x = -0.06, y = 0.14, angle = -90, range_ = 0.8, beam_width = 0.001},
+	{x = -0.04, y = 0.14, angle = -45, range_ = 1.5, beam_width = 0.001},
+	{x = 0.00, y = 0.14, angle = 0, range_ = 1, beam_width = 0.001},
+	{x = 0.04, y = 0.14, angle = 45, range_ = 1.5, beam_width = 0.001},
+	{x = 0.06, y = 0.14, angle = 90, range_ = 0.8, beam_width = 0.001},
 ]
 
 wheel_radius = 0.035
