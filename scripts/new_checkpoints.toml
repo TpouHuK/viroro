@@ -1,0 +1,10 @@
+[checkpoints]
+# 1-2, 1/2
+checkpoints = [
+	{t = "h", pos = 1, a = 2, b = 3, dir = 1},
+	{t = "v", pos = 1, a = 2, b = 3, dir = 2},
+	{t = "h", pos = 1, a = 2, b = 3, dir = 2},
+	{t = "h", pos = 1, a = 2, b = 3, dir = 1},
+	{t = "h", pos = 1, a = 2, b = 3, dir = 2},
+	{t = "h", pos = 1, a = 2, b = 3, dir = 1},
+]

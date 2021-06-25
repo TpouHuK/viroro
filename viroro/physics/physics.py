@@ -178,10 +178,10 @@ class Car(PGObject):
         self.shape = pymunk.Poly(
             self.body,
             [
-                (-self.width/2, -self.height),
-                (self.width/2, -self.height),
-                (self.width/2, self.height),
-                (-self.width/2, self.height)
+                (-self.width/2, -self.height/2),
+                (self.width/2, -self.height/2),
+                (self.width/2, self.height/2),
+                (-self.width/2, self.height/2)
                 ])
         self.shape.friction = config["hull_friction"]
         self.shape.filter = shape_filter
@@ -556,6 +556,24 @@ class CheckPoints(PGObject):
             for item in self.f_on_screen:
                 canvas.delete(item)
         self.on_screen = []
+
+
+class CheckPoints2(PGObject):
+    def __init__(self, checkpoints, car):
+        self.checkpoints = checkpoints
+        pass
+
+    def score(self):
+        pass
+
+    def _upd(self):
+        pass
+
+    def show(self, draw_options):
+        pass
+
+    def cls(self, draw_options):
+        pass
 
 
 class Field(PGObject):
