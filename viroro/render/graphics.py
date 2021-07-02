@@ -1,4 +1,7 @@
+from math import radians
+
 from pymunk.vec2d import Vec2d
+import PySimpleGUI as sg
 
 
 def draw_circle(canvas, point, radius, *args, **kwargs):
@@ -9,21 +12,50 @@ def draw_circle(canvas, point, radius, *args, **kwargs):
 
 
 class DrawOptions():
-    def __init__(self, canvas, zoom, offset=Vec2d(0, 0)):
+    def __init__(self, canvas, zoom, size, offset=Vec2d(0, 0)):
         self.canvas = canvas
-        self.offset = offset
+        self.offset = Vec2d(*offset)
         self.zoom = zoom
+        self.angle = 0
+        self.size = Vec2d(*size)
 
     def scale_screen(self, v):
         return v * self.zoom
 
     def to_screen(self, v):
-        return v * self.zoom + self.offset
+        on_screen = v * self.zoom + self.offset 
+        rotated = (on_screen - self.size/2).rotated(-self.angle) + self.size/2
+        return rotated
+
+    def clear(self):
+        self.canvas.delete("all")
 
 
 class Viewport():
     def __init__(self, size, key="-VIEWPORT-"):
         self.sg_graph = sg.Graph(size, (0, 0), size, key="-VIEWPORT-")
+        self.size = size
+
+    def init_canvas(self, zoom, offset):
+        # We can't accesss .TKCanvas untill window is created
+        # so we need to create draw_options after window creation
+        self.draw_options = DrawOptions(
+                self.sg_graph.TKCanvas,
+                zoom,
+                self.size,
+                offset,
+                )
+
+    def set_view(self, zoom, offset, angle=0):
+        self.draw_options.zoom = zoom
+        self.draw_options.offset = offset
+        self.draw_options.angle = angle
+
+    def show(self, field):
+        self.draw_options.clear()
+        draw_car(field.car, self.draw_options)
+        draw_walls(field.walls, self.draw_options)
+        draw_checkpoints(field.checkpoints, self.draw_options)
 
 
 def draw_distance_sensor(ds, draw_options):

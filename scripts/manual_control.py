@@ -1,17 +1,6 @@
-<<<<<<< HEAD
 import PySimpleGUI as sg
 
-import viroro.render as r
-import viroro.physics as ph
-
-FIELD_CONFIG = pytomlpp.load(open("small_car_items.toml"))
-field = ph.Field(FIELD_CONFIG)
-
-
-=======
 import time
-import threading
-import multiprocessing
 import itertools
 
 import pytomlpp
@@ -19,7 +8,7 @@ import PySimpleGUI as sg
 import pynput
 
 import viroro.physics as ph
-
+import viroro.render as render
 
 FRAME_TIME = 1/60 * 1000
 FIELD_CONFIG = pytomlpp.load(open("items.toml"))
@@ -31,37 +20,21 @@ def millis():
 
 
 def create_window():
-    vp_size = (800, 400)
-    viewport = sg.Graph(vp_size, (0, 0), vp_size, key="-VIEWPORT-")
+    viewport = render.Viewport(size=(800, 400))
     layout = [[
-        sg.Frame("Viewport", [[viewport]]),
+        sg.Frame("Viewport", [[viewport.sg_graph]]),
             sg.Column([
-                [sg.B("Dump"), sg.B("Load"), sg.B("Reset car", key="-RESET_CAR-")],
+                [sg.B("Reset car", key="-RESET_CAR-")],
                 [sg.Frame("Values", [[sg.Text("", size=(50, 10), key="-VALUES-")]])],
             ])
         ]]
-    return sg.Window("Viroro 🚚", layout, finalize=True)
-
-
-send_frames = False
-cur_frame = []
-cur_frame_lock = threading.Lock()
-cur_frame_ready = threading.Event()
-cur_progress = 0
-cur_generation = 0
-cur_max_fitness = 0
-
-field = None
-field_lock = threading.Lock()
+    return (sg.Window("Viroro 🚚", layout, finalize=True), viewport)
 
 
 def main():
-    global field
-
     sg.theme("Reddit")
-    window = create_window()
-    
-    viewport = ph.DrawOptions(window["-VIEWPORT-"].TKCanvas, 84, (5, 5))
+    window, viewport = create_window()
+    viewport.init_canvas(zoom=100, offset=(0, 0))
     viewport_items = []
     evolving_population = False
 
@@ -81,12 +54,18 @@ def main():
     keys = {"w": False, "a": False, "s": False, "d": False}
 
     def on_press(key):
-        if key.char in {"w", "a", "s", "d"}:
-            keys[key.char] = True
+        try:
+            if key.char in {"w", "a", "s", "d"}:
+                keys[key.char] = True
+        except AttributeError:
+            pass
 
     def on_release(key):
-        if key.char in {"w", "a", "s", "d"}:
-            keys[key.char] = False
+        try:
+            if key.char in {"w", "a", "s", "d"}:
+                keys[key.char] = False
+        except AttributeError:
+            pass
 
     keyboard_listener = pynput.keyboard.Listener(on_press, on_release)
     keyboard_listener.start()
@@ -98,8 +77,7 @@ def main():
         if event == sg.WIN_CLOSED:
             break
         elif event == "-RESET_CAR-":
-            with field_lock:
-                field.reset()
+            field.reset()
 
         # Input
         if keys["w"]:
@@ -120,13 +98,17 @@ def main():
         # Drawing
         if millis() - last_frame > FRAME_TIME:
             draw_t0 = millis()
+            field.step()
+
+            zoom = 190 - (abs(field.car.body.velocity)*4.5)**2*0.5
+            offset = field.car.body.position * -zoom + (400, 200)
+            angle = field.car.body.angle
+            viewport.set_view(zoom, offset, angle)
+
+            viewport.show(field)
             draw_time = millis() - draw_t0
 
-            viewport.canvas.delete("all")
-            field.show(viewport)
-            field.step()
             text_box["vis_car_score"] = round(field.score(), 2)
-
             text_box["vis_time"] = draw_time
 
         loop_time = millis() - t0
@@ -141,4 +123,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> master
