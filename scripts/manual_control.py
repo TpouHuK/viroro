@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 
 import time
-import itertools
 
 import pytomlpp
 import PySimpleGUI as sg
