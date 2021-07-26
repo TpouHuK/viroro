@@ -92,10 +92,10 @@ class Car(PGObject):
 
         shape_filter = pymunk.ShapeFilter(group)
         self._wheels = [
-            Wheel(*wheel_config, position + Vec2d(-tw, -th), shape_filter),
-            Wheel(*wheel_config, position + Vec2d(+tw, -th), shape_filter),
-            Wheel(*wheel_config, position + Vec2d(-bw, +bh), shape_filter),
-            Wheel(*wheel_config, position + Vec2d(+bw, +bh), shape_filter),
+            Wheel(*wheel_config, position + (Vec2d(-tw, -th)).rotated_degrees(angle), shape_filter),
+            Wheel(*wheel_config, position + (Vec2d(+tw, -th)).rotated_degrees(angle), shape_filter),
+            Wheel(*wheel_config, position + (Vec2d(-bw, +bh)).rotated_degrees(angle), shape_filter),
+            Wheel(*wheel_config, position + (Vec2d(+bw, +bh)).rotated_degrees(angle), shape_filter),
             ]
         for wheel in self._wheels:
             self._to_space.extend(wheel._to_space)
@@ -110,6 +110,7 @@ class Car(PGObject):
         moment = pymunk.moment_for_box(self.mass, (self.width, self.height))
         self.body = pymunk.Body(self.mass, moment)
         self.body.position = position
+        self.body.angle = radians(angle)
         w, h = self.width, self.height
         self.shape = pymunk.Poly(
             self.body,
@@ -128,7 +129,7 @@ class Car(PGObject):
         def glue(b1, b2):
             """Bind two bodies together."""
             c1 = pymunk.constraints.PinJoint(
-                b1, b2, (0, 0), b1.position - position)
+                b1, b2, (0, 0), (b1.position - position).rotated_degrees(-angle))
             c2 = pymunk.constraints.GearJoint(b1, b2, 0, 1)
             c1.collide_bodies = False
             c2.collide_bodies = False
