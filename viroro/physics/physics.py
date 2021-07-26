@@ -1,4 +1,4 @@
-from math import copysign, radians, sqrt
+from math import copysign, radians
 import pymunk
 from pymunk.vec2d import Vec2d
 
@@ -66,24 +66,22 @@ class Car(PGObject):
     def __init__(self, config, group=1):
         """Create a car.
 
-        config -- car properties, big dictionary, big mess
+        config -- car properties, undocumented, cba
         position -- position in pymunk world coords
         group -- car collision group, every car should 
         """
-        position = config["position"]
-
         self.on_screen = []
         self._to_space = []
         self.motor_power = 0
 
-        shape_filter = pymunk.ShapeFilter(group)
-        position = Vec2d(*position)
+        position = Vec2d(*config["position"])
+        angle = config["angle"]
 
         tw = config["front_wheels_x"]
         th = config["front_wheels_y"]
         bw = config["back_wheels_x"]
         bh = config["back_wheels_y"]
-        wheel_c = (
+        wheel_config = (
             config["wheel_radius"],
             config["wheel_width"],
             config["wheel_mass"],
@@ -91,11 +89,13 @@ class Car(PGObject):
             config["wheel_friction_force"],
             config["wheel_side_friction"],
             config["wheel_weird_forward_friction"])
+
+        shape_filter = pymunk.ShapeFilter(group)
         self._wheels = [
-            Wheel(*wheel_c, position + Vec2d(-tw, -th), shape_filter),
-            Wheel(*wheel_c, position + Vec2d(+tw, -th), shape_filter),
-            Wheel(*wheel_c, position + Vec2d(-bw, +bh), shape_filter),
-            Wheel(*wheel_c, position + Vec2d(+bw, +bh), shape_filter),
+            Wheel(*wheel_config, position + Vec2d(-tw, -th), shape_filter),
+            Wheel(*wheel_config, position + Vec2d(+tw, -th), shape_filter),
+            Wheel(*wheel_config, position + Vec2d(-bw, +bh), shape_filter),
+            Wheel(*wheel_config, position + Vec2d(+bw, +bh), shape_filter),
             ]
         for wheel in self._wheels:
             self._to_space.extend(wheel._to_space)
@@ -117,8 +117,10 @@ class Car(PGObject):
                 (-self.width/2, -self.height),
                 (self.width/2, -self.height),
                 (self.width/2, self.height),
-                (-self.width/2, self.height)
-                ])
+                (-self.width/2, self.height),
+            ]
+        )
+
         self.shape.friction = config["hull_friction"]
         self.shape.filter = shape_filter
         self._to_space.extend((self.body, self.shape))
@@ -149,9 +151,11 @@ class Car(PGObject):
             self._to_space.extend(sens._to_space)
 
     def steer(self, deg):
-        """Set angle of front wheels in degrees.
+        """Set angle of front wheels.
 
-        deg -- degrees (positive -> clockwise, negative -> counterclockwise)
+        0 -> straight,
+        positive -> clockwise(right),
+        negative -> counterclockwise(left)
         """
         angle = -radians(max(min(self.max_steer_angle, deg), -self.max_steer_angle))
         self.lw_gearjoint.phase = angle

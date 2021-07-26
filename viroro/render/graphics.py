@@ -1,10 +1,8 @@
-from math import radians
-
 from pymunk.vec2d import Vec2d
 import PySimpleGUI as sg
 
 
-def draw_circle(canvas, point, radius, *args, **kwargs):
+def tk_draw_circle(canvas, point, radius, *args, **kwargs):
     """Draw circle on tkinter canvas."""
     return canvas.create_oval(
             point.x - radius, point.y - radius,
@@ -36,9 +34,8 @@ class Viewport():
         self.sg_graph = sg.Graph(size, (0, 0), size, key="-VIEWPORT-")
         self.size = size
 
-    def init_canvas(self, zoom, offset):
-        # We can't accesss .TKCanvas untill window is created
-        # so we need to create draw_options after window creation
+    def create_draw_options(self, zoom, offset):
+        """Must be called afer `sg.Window.Finalize`."""
         self.draw_options = DrawOptions(
                 self.sg_graph.TKCanvas,
                 zoom,
@@ -60,7 +57,6 @@ class Viewport():
 
 def draw_distance_sensor(ds, draw_options):
     canvas = draw_options.canvas
-    body = ds._shape.body
     p1, p2 = ds._world_cords()
     p1 = draw_options.to_screen(p1)
 
@@ -69,7 +65,7 @@ def draw_distance_sensor(ds, draw_options):
         point = draw_options.to_screen(point)
         p2 = point
         canvas.create_line(*p1, *p2, fill="#5cffff")
-        draw_circle(canvas, point, radius=3, fill="#ff5cef", width=1)
+        tk_draw_circle(canvas, point, radius=3, fill="#ff5cef", width=1)
     else:
         p2 = draw_options.to_screen(p2)
         canvas.create_line(*p1, *p2, fill="#5cffff")
@@ -98,13 +94,12 @@ def draw_car(car, draw_options):
         canvas.create_line(*p1, *p2)
 
     SIZE = 4
-    p = car.body.position
-    p = draw_options.to_screen(p)
-    a = canvas.create_line(
+    p = draw_options.to_screen(car.body.position)
+    canvas.create_line(
             p-Vec2d(0, SIZE), p+Vec2d(0, SIZE),
             fill="#db91c5", width=2
             )
-    b = canvas.create_line(
+    canvas.create_line(
             p-Vec2d(SIZE, 0), p+Vec2d(SIZE, 0),
             fill="#db91c5", width=2
             )
@@ -124,31 +119,29 @@ def draw_checkpoints(cps, draw_options):
     CROSS_SIZE = 4
     for p in cps.checkpoints:
         p = draw_options.to_screen(p)
-        a = canvas.create_line(
-                p-Vec2d(0, CROSS_SIZE), p+Vec2d(0, CROSS_SIZE),
-                fill="#9ede92", width=2
-                )
-        b = canvas.create_line(
-                p-Vec2d(CROSS_SIZE, 0), p+Vec2d(CROSS_SIZE, 0),
-                fill="#9ede92", width=2
-                )
-        c = draw_circle(
-                canvas, p,
-                draw_options.scale_screen(cps.detection_radius))
+        canvas.create_line(
+            p-Vec2d(0, CROSS_SIZE), p+Vec2d(0, CROSS_SIZE),
+            fill="#9ede92", width=2
+            )
+        canvas.create_line(
+            p-Vec2d(CROSS_SIZE, 0), p+Vec2d(CROSS_SIZE, 0),
+            fill="#9ede92", width=2
+            )
+        tk_draw_circle(
+            canvas, p,
+            draw_options.scale_screen(cps.detection_radius))
 
     for num, car in enumerate(cps.cars):
         p1 = draw_options.to_screen(car.position)
-        p2 = draw_options.to_screen(
-                cps.checkpoints[cps.car_checkpoint[num]]
-                )
-        a = canvas.create_line(p1, p2, fill="#a880ff")
+        p2 = draw_options.to_screen(cps.checkpoints[cps.car_checkpoint[num]])
+        canvas.create_line(p1, p2, fill="#a880ff")
 
 
-def draw_test_circle(circ, draw_options):
+def draw_test_circle(circle, draw_options):
     canvas = draw_options.canvas
-    pos = draw_options.to_screen(circ.shape.body.position)
-    rad = draw_options.scale_screen(circ.radius)
-    draw_circle(canvas, pos, rad, fill="#63ff92", width=1)
+    pos = draw_options.to_screen(circle.shape.body.position)
+    rad = draw_options.scale_screen(circle.radius)
+    tk_draw_circle(canvas, pos, rad, fill="#63ff92", width=1)
 
 
 def draw_field(field, draw_options):

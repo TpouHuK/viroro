@@ -35,7 +35,7 @@ def create_window():
 def main():
     sg.theme("Reddit")
     window, viewport = create_window()
-    viewport.init_canvas(zoom=100, offset=(0, 0))
+    viewport.create_draw_options(zoom=100, offset=(0, 0))
 
     field = ph.Field(FIELD_CONFIG)
 
