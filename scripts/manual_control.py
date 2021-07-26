@@ -10,8 +10,10 @@ import viroro.physics as ph
 import viroro.render as render
 
 FRAME_TIME = 1/60 * 1000
-FIELD_CONFIG = pytomlpp.load(open("items.toml"))
+FIELD_CONFIG = pytomlpp.load(open("small_car_items.toml"))
 FIELD_STEPS = 100
+
+VIEWPORT_SIZE = (1200, 600)
 
 
 def millis():
@@ -19,7 +21,7 @@ def millis():
 
 
 def create_window():
-    viewport = render.Viewport(size=(800, 400))
+    viewport = render.Viewport(size=VIEWPORT_SIZE)
     layout = [[
         sg.Frame("Viewport", [[viewport.sg_graph]]),
             sg.Column([
@@ -34,21 +36,13 @@ def main():
     sg.theme("Reddit")
     window, viewport = create_window()
     viewport.init_canvas(zoom=100, offset=(0, 0))
-    viewport_items = []
-    evolving_population = False
 
-    field = ph.Field(pytomlpp.load(open("items.toml")))
+    field = ph.Field(FIELD_CONFIG)
 
     last_frame = 0
     
     text_box = {}
-    text_box["iddle_gui_time"] = 0
-    text_box["loop_time"] = 0
-    text_box["vis_time"] = 0
-    text_box["vis_car_score"] = 0
-    text_box["generation"] = 0
     iddle_gui_time = 0
-    gen_start = 0
 
     keys = {"w": False, "a": False, "s": False, "d": False}
 
@@ -68,6 +62,10 @@ def main():
 
     keyboard_listener = pynput.keyboard.Listener(on_press, on_release)
     keyboard_listener.start()
+
+    AVG_LOOP_COUNT = 20
+    loop_times = [0] * AVG_LOOP_COUNT
+    iddle_times = [0] * AVG_LOOP_COUNT
 
     while True:
         t0 = millis()
@@ -94,13 +92,14 @@ def main():
             field.car.steer(0)
 
 
-        # Drawing
+        # Rendering
         if millis() - last_frame > FRAME_TIME:
             draw_t0 = millis()
             field.step()
 
-            zoom = 190 - (abs(field.car.body.velocity)*4.5)**2*0.5
-            offset = field.car.body.position * -zoom + (400, 200)
+            # Camera control
+            zoom = 200
+            offset = field.car.body.position * -zoom + (VIEWPORT_SIZE[0]/2, VIEWPORT_SIZE[1]/2)
             angle = field.car.body.angle
             viewport.set_view(zoom, offset, angle)
 
@@ -110,14 +109,20 @@ def main():
             text_box["vis_car_score"] = round(field.score(), 2)
             text_box["vis_time"] = draw_time
 
-        loop_time = millis() - t0
-        iddle_gui_time = max(0, round(FRAME_TIME - loop_time))
-        text_box["iddle_gui_time"] = iddle_gui_time
-        text_box["loop_time"] = round(loop_time)
-        text_box["keys"] = keys
+            text_box["avg_loop_time"] = round(sum(loop_times)/AVG_LOOP_COUNT)
+            text_box["avg_iddle_time"] = round(sum(iddle_times)/AVG_LOOP_COUNT)
+            text_box["keys"] = keys
+            window["-VALUES-"].update(
+                    "\n".join(f"{n}: {v}" for n, v in text_box.items()))
 
-        window["-VALUES-"].update(
-                "\n".join(f"{n}: {v}" for n, v in text_box.items()))
+        loop_time = millis() - t0
+        loop_times.append(loop_time)
+        loop_times.pop(0)
+
+        iddle_gui_time = max(0, round(FRAME_TIME - loop_time))
+        iddle_times.append(iddle_gui_time)
+        iddle_times.pop(0)
+
 
 
 if __name__ == "__main__":

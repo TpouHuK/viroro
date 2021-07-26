@@ -27,7 +27,7 @@ back_wheels_x = 0.05
 back_wheels_y = 0.06
 
 car_width = 0.10
-car_height = 0.18
+car_height = 0.09
 car_mass = 0.420
 max_steer_angle = 45
 max_speed = 6
