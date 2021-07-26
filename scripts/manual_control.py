@@ -10,7 +10,7 @@ import viroro.physics as ph
 import viroro.render as render
 
 FRAME_TIME = 1/60 * 1000
-FIELD_CONFIG = pytomlpp.load(open("small_car_items.toml"))
+FIELD_CONFIG = pytomlpp.load(open("big_car.toml"))
 FIELD_STEPS = 100
 
 VIEWPORT_SIZE = (1200, 600)
