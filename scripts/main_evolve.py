@@ -1,3 +1,4 @@
+from scripts.manual_control import VIEWPORT_SIZE
 import time
 import threading
 import multiprocessing
@@ -8,11 +9,13 @@ import PySimpleGUI as sg
 import neat
 
 import viroro.physics as ph
+import viroro.render as render
 
 
 FRAME_TIME = 1/60 * 1000
-FIELD_CONFIG = pytomlpp.load(open("small_car_items.toml"))
+FIELD_CONFIG = pytomlpp.load(open("big_car.toml"))
 FIELD_STEPS = 1000
+VIEWPORT_SIZE = (1200, 600)
 
 
 def millis():
@@ -21,9 +24,9 @@ def millis():
 
 def create_window():
     vp_size = (800, 400)
-    viewport = sg.Graph(vp_size, (0, 0), vp_size, key="-VIEWPORT-")
+    viewport = render.Viewport(size=VIEWPORT_SIZE)
     layout = [[
-        sg.Frame("Viewport", [[viewport]]),
+        sg.Frame("Viewport", [[viewport.sg_graph]]),
             sg.Column([
                 [sg.B("Run", key="-STARTSTOP-", size=(5,1))],
                 [sg.ProgressBar(100, "horizontal", size=(34, 10), key="-PROGRESS-")],
@@ -42,7 +45,9 @@ def create_window():
                 ])],
             ])
         ]]
-    return sg.Window("Viroro 🚚", layout, finalize=True)
+    window = sg.Window("Viroro 🚚", layout, finalize=True)
+    viewport.create_draw_options()
+    return (window, viewport)
 
 
 def create_testing_chamber(g, config):
@@ -146,10 +151,8 @@ def main(population, config):
     global best_field
 
     sg.theme("Reddit")
-    window = create_window()
+    window, viewport = create_window()
     
-    viewport = ph.DrawOptions(window["-VIEWPORT-"].TKCanvas, 84, (5, 5))
-    viewport_items = []
     evolving_population = False
 
     best_field = ph.Field(FIELD_CONFIG)
@@ -201,7 +204,8 @@ def main(population, config):
                 cur_mode = "-VIS_MODE_BEST-"
             send_frames = cur_mode == "-VIS_MODE_FULL-"
             if cur_mode != last_vis_mode:
-                viewport.canvas.delete("all")
+                #viewport.canvas.delete("all")
+                pass
             last_vis_mode = cur_mode
             if not values["-VIS_MODE_FULL-"] and not cur_frame_ready.is_set():
                 cur_frame_ready.set()
@@ -209,16 +213,17 @@ def main(population, config):
                 if not cur_frame_ready.is_set():
                     with cur_frame_lock:
                         if cur_frame:
-                            cur_frame[0].show(viewport)
+                            viewport.show(cur_frame[0])
                             for field in cur_frame[1:]:
-                                field.car.show(viewport)
+                                viewport.show_car(field.car)
                         else:
-                            viewport.canvas.delete("all")
+                            pass
+                            #viewport.canvas.delete("all")
                         cur_frame_ready.set()
             elif values["-VIS_MODE_BEST-"]:
                 with best_field_lock:
-                    viewport.canvas.delete("all")
-                    best_field.show(viewport)
+                    #viewport.canvas.delete("all")
+                    viewport.show(best_field)
                     best_field.step()
                     text_box["vis_car_score"] = round(best_field.score(), 2)
 

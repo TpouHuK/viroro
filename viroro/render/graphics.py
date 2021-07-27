@@ -34,7 +34,7 @@ class Viewport():
         self.sg_graph = sg.Graph(size, (0, 0), size, key="-VIEWPORT-")
         self.size = size
 
-    def create_draw_options(self, zoom, offset):
+    def create_draw_options(self, zoom=100, offset=(0, 0)):
         """Must be called afer `sg.Window.Finalize`."""
         self.draw_options = DrawOptions(
                 self.sg_graph.TKCanvas,
@@ -48,8 +48,12 @@ class Viewport():
         self.draw_options.offset = offset
         self.draw_options.angle = angle
 
-    def show(self, field):
-        self.draw_options.clear()
+    def show_car(self, car):
+        draw_car(car, self.draw_options)
+
+    def show(self, field, clear=True):
+        if clear:
+            self.draw_options.clear()
         draw_car(field.car, self.draw_options)
         draw_walls(field.walls, self.draw_options)
         draw_checkpoints(field.checkpoints, self.draw_options)

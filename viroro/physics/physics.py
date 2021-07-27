@@ -151,23 +151,13 @@ class Car(PGObject):
             self.sensors.append(sens)
             self._to_space.extend(sens._to_space)
 
-    def steer(self, deg):
-        """Set angle of front wheels.
+    def control(self, throttle, steering):
+        """Control car. gas:(-100..100), steering:(-max_angle..+max_angle)"""
 
-        0 -> straight,
-        positive -> clockwise(right),
-        negative -> counterclockwise(left)
-        """
-        angle = -radians(max(min(self.max_steer_angle, deg), -self.max_steer_angle))
+        angle = -radians(max(min(self.max_steer_angle, steering), -self.max_steer_angle))
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
-
-    def push(self, power):
-        """Set power with which car is pushed forward.
-
-        power -- 0-100
-        """
-        self.motor_power = power/100
+        self.motor_power = throttle/100
 
     @property
     def position(self):
@@ -433,8 +423,7 @@ class Field(PGObject):
             out = self.algo(inp)
             angle = out[0] * self.car.max_steer_angle
             throttle = out[1] * 100
-            self.car.steer(angle)
-            self.car.push(throttle)
+            self.car.control(throttle, angle)
         self.pm_field.step()
 
     def score(self):

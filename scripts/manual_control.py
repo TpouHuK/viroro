@@ -35,7 +35,7 @@ def create_window():
 def main():
     sg.theme("Reddit")
     window, viewport = create_window()
-    viewport.create_draw_options(zoom=100, offset=(0, 0))
+    viewport.create_draw_options()
 
     field = ph.Field(FIELD_CONFIG)
 
@@ -78,18 +78,20 @@ def main():
 
         # Input
         if keys["w"]:
-            field.car.push(10)
+            gas = 10
         elif keys["s"]:
-            field.car.push(-10)
+            gas = -10
         else:
-            field.car.push(0)
+            gas = 0
 
         if keys["a"]:
-            field.car.steer(-field.car.max_steer_angle)
+            steer = -field.car.max_steer_angle
         elif keys["d"]:
-            field.car.steer(+field.car.max_steer_angle)
+            steer = +field.car.max_steer_angle
         else:
-            field.car.steer(0)
+            steer = 0
+
+        field.car.control(gas, steer)
 
 
         # Rendering
