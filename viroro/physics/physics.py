@@ -1,3 +1,4 @@
+from enum import IntEnum
 from math import copysign, radians
 import pymunk
 from pymunk.vec2d import Vec2d
@@ -58,6 +59,11 @@ class DistanceSensor(PGObject):
         p1 = self._shape.a.rotated(body.angle) + body.position
         p2 = self._shape.b.rotated(body.angle) + body.position
         return (p1, p2)
+
+
+class CollisionType(IntEnum):
+    CAR_PART = 1
+    WALL = 2
 
 
 class Car(PGObject):
@@ -121,6 +127,7 @@ class Car(PGObject):
                 (-self.width/2, self.height),
             ]
         )
+        self.shape.collision_type = CollisionType.CAR_PART
 
         self.shape.friction = config["hull_friction"]
         self.shape.filter = shape_filter
@@ -228,6 +235,7 @@ class Wheel(PGObject):
             (-w/2, r)])
         self.shape.friction = side_friction
         self.shape.filter = shape_filter
+        self.shape.collision_type = CollisionType.CAR_PART
 
         def wheel_physics(body, gravity, damping, dt):
             local_velocity = body.velocity.rotated(-body.angle)
@@ -303,6 +311,7 @@ class Walls(PGObject):
                     body_type=pymunk.Body.STATIC)
             collision_shape = pymunk.Segment(body, *wall, thickness)
             collision_shape.elasticity = elasticity
+            collision_shape.collision_type = CollisionType.WALL
             self._to_space.extend((body, collision_shape))
 
             self.s_walls.append(collision_shape)
