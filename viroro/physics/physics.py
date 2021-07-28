@@ -424,6 +424,17 @@ class Field(PGObject):
         self.pm_field = PymunkField(**config["pymunk_field"])
         self.pm_field.add(car, walls, checkpoints)
 
+        self.car_wall_handler = self.pm_field.space.add_collision_handler(
+            CollisionType.CAR_PART,
+            CollisionType.WALL,
+        )
+
+        self.car_hit = False
+        def callback_handler(arbiter, space, data):
+            self.car_hit = True
+            return True
+        self.car_wall_handler.pre_solve = callback_handler
+
         self.algo = None
 
     def step(self):
@@ -433,6 +444,7 @@ class Field(PGObject):
             angle = out[0] * self.car.max_steer_angle
             throttle = out[1] * 100
             self.car.control(throttle, angle)
+        self.car_hit = False
         self.pm_field.step()
 
     def score(self):

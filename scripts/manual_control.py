@@ -113,6 +113,7 @@ def main():
 
             text_box["avg_loop_time"] = round(sum(loop_times)/AVG_LOOP_COUNT)
             text_box["avg_iddle_time"] = round(sum(iddle_times)/AVG_LOOP_COUNT)
+            text_box["car_hit"] = field.car_hit
             window["-VALUES-"].update(
                     "\n".join(f"{n}: {v}" for n, v in text_box.items()))
 
