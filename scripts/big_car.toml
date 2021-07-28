@@ -32,7 +32,8 @@ car_height = 0.30
 car_mass = 1.4
 max_steer_angle = 45
 max_speed = 6
-max_power = 84
+#max_power = 84
+max_power = 8.4
 hull_friction = 0.8
 
 [circle]

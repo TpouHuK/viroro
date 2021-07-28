@@ -1,4 +1,3 @@
-from scripts.manual_control import VIEWPORT_SIZE
 import time
 import threading
 import multiprocessing
@@ -14,7 +13,7 @@ import viroro.render as render
 
 FRAME_TIME = 1/60 * 1000
 FIELD_CONFIG = pytomlpp.load(open("big_car.toml"))
-FIELD_STEPS = 1000
+FIELD_STEPS = 600
 VIEWPORT_SIZE = (1200, 600)
 
 
@@ -23,7 +22,6 @@ def millis():
 
 
 def create_window():
-    vp_size = (800, 400)
     viewport = render.Viewport(size=VIEWPORT_SIZE)
     layout = [[
         sg.Frame("Viewport", [[viewport.sg_graph]]),
@@ -52,8 +50,6 @@ def create_window():
 
 def create_testing_chamber(g, config):
     net = neat.nn.FeedForwardNetwork.create(g, config)
-    MAX_STEER = FIELD_CONFIG['car']['max_steer_angle']
-    MAX_PWR = 100
 
     def algo(inp):
         return net.activate(inp)
@@ -74,15 +70,37 @@ cur_max_fitness = 0
 best_field = None
 best_field_lock = threading.Lock()
 
+class EvalGenome():
+    def __init__(self, genome, config):
+        self._id, g = genome
+        self.steps_left = FIELD_STEPS
+        self.field = create_testing_chamber(g, config)
+        self.wall_hits = 0
+    
+    def run(self):
+        while self.step():
+            pass
+
+    def step(self):
+        if self.steps_left:
+            self.field.step()
+            self.steps_left -= 1
+            if self.field.car_hit:
+                self.steps_left = 0
+                self.wall_hits += 1
+            if self.wall_hits > 40:
+                self.steps_left = 0
+        return bool(self.steps_left)
+
+    def results(self):
+        score = self.field.score() - self.wall_hits * 0.1
+        return (self._id, score)
+
 
 def _eval_genome(arg):
-    genome, config = arg
-    _id, g = genome
-    field = create_testing_chamber(g, config)
-    for _ in range(FIELD_STEPS):
-        field.step()
-    fitness = field.score()
-    return (_id, fitness)
+    chamber = EvalGenome(*arg)
+    chamber.run()
+    return chamber.results()
 
 
 def calc_thread(popul):
@@ -110,23 +128,26 @@ def calc_thread(popul):
         def _eval_fitness(genomes, config):
             global cur_progress
             global cur_frame
-            fitnesses = {}
-            fields = []
+            chambers = []
             for genome in genomes:
-                _id, g = genome
-                fields.append(create_testing_chamber(g, config))
+                chambers.append(EvalGenome(genome, config))
 
-            for cur_step in range(FIELD_STEPS):
+            cur_frame = chambers
+            active_chambers = chambers.copy()
+
+            cur_step = 0
+            while active_chambers:
                 cur_frame_ready.wait()
                 with cur_frame_lock:
-                    for field in fields:
-                        field.step()
-                    cur_frame = fields
+                    active_chambers = list(filter(lambda x: x.step(), active_chambers))
                 cur_frame_ready.clear()
-                cur_progress = cur_step/FIELD_STEPS*100
-                        
-            for field, genome in zip(fields, genomes):
-                genome[1].fitness = field.score()
+                steps_done = (len(chambers)-len(active_chambers))*FIELD_STEPS + len(active_chambers)*cur_step
+                all_steps = len(chambers)*FIELD_STEPS
+                cur_progress = steps_done/all_steps*100
+                cur_step += 1
+                
+            for chamber, genome in zip(chambers, genomes):
+                genome[1].fitness = chamber.results()[1]
 
     popul.run(_eval_fitness, 1)
     cur_generation = popul.generation
@@ -213,9 +234,9 @@ def main(population, config):
                 if not cur_frame_ready.is_set():
                     with cur_frame_lock:
                         if cur_frame:
-                            viewport.show(cur_frame[0])
-                            for field in cur_frame[1:]:
-                                viewport.show_car(field.car)
+                            viewport.show(cur_frame[0].field)
+                            for chamber in cur_frame[1:]:
+                                viewport.show_car(chamber.field.car)
                         else:
                             pass
                             #viewport.canvas.delete("all")
@@ -248,7 +269,7 @@ if __name__ == "__main__":
 
     # Create core evolution algorithm class
     population = neat.Population(config)
-    #population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-24")
+    #population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-48")
 
 
     # Add reporter for fancy statistical result

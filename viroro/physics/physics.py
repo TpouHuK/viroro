@@ -141,7 +141,8 @@ class Car(PGObject):
             c1.collide_bodies = False
             c2.collide_bodies = False
             c1.error_bias = 0
-            c2.error_bias = 0.00001
+            #c2.error_bias = 0.00001
+            c2.error_bias = 0
             self._to_space.extend((c1, c2))
             return c2
 

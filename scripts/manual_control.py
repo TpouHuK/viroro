@@ -5,12 +5,14 @@ import time
 import pytomlpp
 import PySimpleGUI as sg
 import pynput
+import neat
 
 import viroro.physics as ph
 import viroro.render as render
 
 FRAME_TIME = 1/60 * 1000
-FIELD_CONFIG = pytomlpp.load(open("big_car.toml"))
+#FRAME_TIME = 1/10 * 1000
+FIELD_CONFIG = pytomlpp.load(open("small_car.toml"))
 FIELD_STEPS = 100
 
 VIEWPORT_SIZE = (1200, 600)
@@ -26,10 +28,48 @@ def create_window():
         sg.Frame("Viewport", [[viewport.sg_graph]]),
             sg.Column([
                 [sg.B("Reset car", key="-RESET_CAR-")],
+                [sg.Checkbox("AI control", key="-AI-")],
                 [sg.Frame("Values", [[sg.Text("", size=(50, 10), key="-VALUES-")]])],
             ])
         ]]
     return (sg.Window("Viroro 🚚", layout, finalize=True), viewport)
+
+
+def create_network(g, config):
+    net = neat.nn.FeedForwardNetwork.create(g, config)
+    def algo(inp):
+        return net.activate(inp)
+    return algo
+
+
+def create_ai_from_checkpoints():
+    population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-48")
+    config_path = "config-feedforward.txt"
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+
+    """
+    for ind, g in enumerate(population.population.values()):
+        print(f"{ind}/{len(population.population)}")
+        a = main_evolve.EvalGenome((None, g), config)
+        a.run()
+        g.fitness = a.results()[1]
+        print(g.fitness)
+
+    max_fit = float("-inf")
+    best_genome = None
+    best_id = None
+    for _id, g in population.population.items():
+        if g.fitness >= max_fit:
+            max_fit = g.fitness
+            best_genome = g
+            best_id = _id
+
+    print(f"ID: {best_id}")
+    """
+    best_genome = population.population[8885]
+    net = create_network(best_genome, config)
+    return net
 
 
 def main():
@@ -67,6 +107,7 @@ def main():
     loop_times = [0] * AVG_LOOP_COUNT
     iddle_times = [0] * AVG_LOOP_COUNT
 
+    net = create_ai_from_checkpoints()
     while True:
         t0 = millis()
         event, values = window.read(timeout=iddle_gui_time)
@@ -78,9 +119,9 @@ def main():
 
         # Input
         if keys["w"]:
-            gas = 10
+            gas = 100
         elif keys["s"]:
-            gas = -10
+            gas = -100
         else:
             gas = 0
 
@@ -91,7 +132,14 @@ def main():
         else:
             steer = 0
 
-        field.car.control(gas, steer)
+        a, b = net(field.car.get_sensor_values())
+        angle = a * field.car.max_steer_angle
+        throttle = b * 100
+
+        if values["-AI-"]:
+            field.car.control(throttle, angle)
+        else:
+            field.car.control(gas, steer)
 
 
         # Rendering
@@ -100,10 +148,10 @@ def main():
             field.step()
 
             # Camera control
-            zoom = 200
+            zoom = 230
             offset = field.car.body.position * -zoom + (VIEWPORT_SIZE[0]/2, VIEWPORT_SIZE[1]/2)
-            angle = field.car.body.angle
-            viewport.set_view(zoom, offset, angle)
+            car_angle = field.car.body.angle
+            viewport.set_view(zoom, offset, car_angle)
 
             viewport.show(field)
             draw_time = millis() - draw_t0
@@ -114,6 +162,8 @@ def main():
             text_box["avg_loop_time"] = round(sum(loop_times)/AVG_LOOP_COUNT)
             text_box["avg_iddle_time"] = round(sum(iddle_times)/AVG_LOOP_COUNT)
             text_box["car_hit"] = field.car_hit
+            text_box["angle"] = round(angle)
+            text_box["throttle"] = round(throttle)
             window["-VALUES-"].update(
                     "\n".join(f"{n}: {v}" for n, v in text_box.items()))
 
