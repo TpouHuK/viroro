@@ -1,6 +1,6 @@
 [pymunk_field]
-dt = 0.016666666 # 60 fps
-microsteps = 130
+control_ups = 60
+simulation_ups = 8000
 
 [car]
 position = [0.5, 3.5]
@@ -31,9 +31,8 @@ car_width = 0.25
 car_height = 0.30
 car_mass = 1.4
 max_steer_angle = 45
-max_speed = 6
-#max_power = 84
-max_power = 8.4
+max_speed = 10 # 6
+max_power = 13
 hull_friction = 0.8
 
 [circle]

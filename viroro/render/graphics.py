@@ -48,15 +48,11 @@ class Viewport():
         self.draw_options.offset = offset
         self.draw_options.angle = angle
 
-    def show_car(self, car):
-        draw_car(car, self.draw_options)
+    def render(self, item, draw_method):
+        draw_method(item, self.draw_options)
 
-    def show(self, field, clear=True):
-        if clear:
-            self.draw_options.clear()
-        draw_car(field.car, self.draw_options)
-        draw_walls(field.walls, self.draw_options)
-        draw_checkpoints(field.checkpoints, self.draw_options)
+    def clear(self):
+        self.draw_options.clear()
 
 
 def draw_distance_sensor(ds, draw_options):

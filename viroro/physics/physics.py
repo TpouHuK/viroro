@@ -141,8 +141,7 @@ class Car(PGObject):
             c1.collide_bodies = False
             c2.collide_bodies = False
             c1.error_bias = 0
-            #c2.error_bias = 0.00001
-            c2.error_bias = 0
+            c2.error_bias = 0.0000001
             self._to_space.extend((c1, c2))
             return c2
 
@@ -159,13 +158,12 @@ class Car(PGObject):
             self.sensors.append(sens)
             self._to_space.extend(sens._to_space)
 
-    def control(self, throttle, steering):
-        """Control car. gas:(-100..100), steering:(-max_angle..+max_angle)"""
-
-        angle = -radians(max(min(self.max_steer_angle, steering), -self.max_steer_angle))
+    def apply_control(self, steering, throttle):
+        """Control car. gas:(-1..1), steering:(-1..+1)"""
+        angle = -radians(max(min(1, steering), -1)*self.max_steer_angle)
         self.lw_gearjoint.phase = angle
         self.rw_gearjoint.phase = angle
-        self.motor_power = throttle/100
+        self.motor_power = throttle
 
     @property
     def position(self):
@@ -334,13 +332,13 @@ class PymunkField():
             self._to_upd.append(item)
 
     def step(self):
-        for i in range(self.microsteps):
+        for _ in range(self.microsteps):
             for item in self._to_upd:
                 item._upd()
             self.space.step(self.microstep_size)
 
 
-class CheckPoints(PGObject):
+class Checkpoints(PGObject):
     def __init__(self, checkpoints, detection_radius):
         """CheckPoints.
 
@@ -393,31 +391,14 @@ class CheckPoints(PGObject):
                 self.car_checkpoint[num] %= len(self.checkpoints)
 
 
-class CheckPoints2(PGObject):
-    def __init__(self, checkpoints, car):
-        self.checkpoints = checkpoints
-        pass
-
-    def score(self):
-        pass
-
-    def _upd(self):
-        pass
-
-    def show(self, draw_options):
-        pass
-
-    def cls(self, draw_options):
-        pass
-
-
 class Field(PGObject):
     def __init__(self, config):
+        raise DeprecationWarning("Use utils.py instead.")
         self.config = config
         car = Car(config["car"])
         walls = Walls(**config["walls"])
         self.walls = walls
-        checkpoints = CheckPoints(**config["checkpoints"])
+        checkpoints = Checkpoints(**config["checkpoints"])
         checkpoints.add_car(car)
 
         self.car = car
@@ -455,7 +436,7 @@ class Field(PGObject):
         config = self.config
         car = Car(config["car"])
         walls = Walls(**config["walls"])
-        checkpoints = CheckPoints(**config["checkpoints"])
+        checkpoints = Checkpoints(**config["checkpoints"])
         checkpoints.add_car(car)
 
         self.car = car
