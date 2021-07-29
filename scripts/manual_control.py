@@ -1,17 +1,16 @@
 import time
 
-import neat
 import pynput
 import PySimpleGUI as sg
 
 import viroro.render as render
 import utils
 
-FPS = 60
-FRAME_PERIOD = 1/FPS
 CONFIG_FILE = "big_car.toml"
 VIEWPORT_SIZE = (1200, 600)
 
+FPS = 100
+FRAME_PERIOD = 1/FPS
 
 def create_window():
     viewport = render.Viewport(size=VIEWPORT_SIZE)
@@ -24,43 +23,6 @@ def create_window():
             ])
         ]]
     return (sg.Window("Viroro 🚚", layout, finalize=True), viewport)
-
-
-def create_network(g, config):
-    net = neat.nn.FeedForwardNetwork.create(g, config)
-    def algo(inp):
-        return net.activate(inp)
-    return algo
-
-
-def create_ai_from_checkpoints():
-    population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-48")
-    config_path = "config-feedforward.txt"
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
-
-    """
-    for ind, g in enumerate(population.population.values()):
-        print(f"{ind}/{len(population.population)}")
-        a = main_evolve.EvalGenome((None, g), config)
-        a.run()
-        g.fitness = a.results()[1]
-        print(g.fitness)
-
-    max_fit = float("-inf")
-    best_genome = None
-    best_id = None
-    for _id, g in population.population.items():
-        if g.fitness >= max_fit:
-            max_fit = g.fitness
-            best_genome = g
-            best_id = _id
-
-    print(f"ID: {best_id}")
-    """
-    best_genome = population.population[8885]
-    net = create_network(best_genome, config)
-    return net
 
 
 def listen_keyboard():
@@ -88,7 +50,7 @@ def listen_keyboard():
 def main():
     sg.theme("Reddit")
     window, viewport = create_window()
-    viewport.create_draw_options()
+    viewport.init_canvas()
 
     field = utils.create_field(CONFIG_FILE)
 
@@ -132,7 +94,7 @@ def main():
 
             # Render
             utils.set_camera_on_car(field, viewport, zoom=200)
-            utils.draw_field(field, viewport)
+            render.draw_field(field, viewport)
 
             # Compute simulation
             field["pymunk_field"].step()

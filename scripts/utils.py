@@ -1,6 +1,9 @@
-import viroro.physics as physics
-import viroro.render as render
+import neat
+import main_evolve
+
 import pytomlpp
+import viroro.physics as physics
+
 
 def create_field(config_file):
     config = pytomlpp.load(open(config_file))
@@ -21,11 +24,37 @@ def create_field(config_file):
         }
 
 
-def draw_field(field, viewport):
-    viewport.clear()
-    viewport.render(field["car"], render.draw_car)
-    viewport.render(field["walls"], render.draw_walls)
-    viewport.render(field["checkpoints"], render.draw_checkpoints)
+def eval_fitness_of_population(population, config):
+    for ind, g in enumerate(population.population.values()):
+        print(f"{ind}/{len(population.population)}")
+        a = main_evolve.EvalGenome((None, g), config)
+        a.run()
+        g.fitness = a.results()[1]
+
+
+def find_best_genome_id(population):
+    max_fit = float("-inf")
+    best_id = None
+    for _id, g in population.population.items():
+        if g.fitness >= max_fit:
+            max_fit = g.fitness
+            best_id = _id
+    return best_id
+
+
+def create_network_from_checkpoints(checkpoint_path, config_path, best_id = None):
+    population = neat.Checkpointer.restore_checkpoint(checkpoint_path)
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+    
+    if not best_id:
+        eval_fitness_of_population(population, config)
+        best_id = find_best_genome_id(population)
+        print(f"Best genome ID: {best_id}")
+
+    best_genome = population.population[best_id]
+    network = create_network(best_genome, config)
+    return network
 
 
 def set_camera_on_car(field, viewport, zoom=200):

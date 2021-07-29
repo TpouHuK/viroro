@@ -1,6 +1,8 @@
 from pymunk.vec2d import Vec2d
 import PySimpleGUI as sg
 
+import viroro.physics as physics
+
 
 def tk_draw_circle(canvas, point, radius, *args, **kwargs):
     """Draw circle on tkinter canvas."""
@@ -9,13 +11,32 @@ def tk_draw_circle(canvas, point, radius, *args, **kwargs):
     point.x + radius, point.y + radius, *args, **kwargs)
 
 
-class DrawOptions():
-    def __init__(self, canvas, zoom, size, offset=Vec2d(0, 0)):
-        self.canvas = canvas
+class Viewport():
+    def __init__(self, size, zoom=100, offset=(0, 0), key="-VIEWPORT-"):
+        self.sg_graph = sg.Graph(size, (0, 0), size, key=key)
+        self.size = Vec2d(*size)
+        
         self.offset = Vec2d(*offset)
         self.zoom = zoom
         self.angle = 0
         self.size = Vec2d(*size)
+
+    def init_canvas(self):
+        """Must be called afer `sg.Window.Finalize`."""
+        self.canvas = self.sg_graph.TKCanvas
+
+    def set_view(self, zoom, offset, angle=0):
+        self.zoom = zoom
+        self.offset = offset
+        self.angle = angle
+
+    def render(self, item):
+        if isinstance(item, physics.Car):
+            draw_car(item, self)
+        elif isinstance(item, physics.Walls):
+            draw_walls(item, self)
+        elif isinstance(item, physics.Checkpoints):
+            draw_checkpoints(item, self)
 
     def scale_screen(self, v):
         return v * self.zoom
@@ -27,32 +48,6 @@ class DrawOptions():
 
     def clear(self):
         self.canvas.delete("all")
-
-
-class Viewport():
-    def __init__(self, size, key="-VIEWPORT-"):
-        self.sg_graph = sg.Graph(size, (0, 0), size, key="-VIEWPORT-")
-        self.size = size
-
-    def create_draw_options(self, zoom=100, offset=(0, 0)):
-        """Must be called afer `sg.Window.Finalize`."""
-        self.draw_options = DrawOptions(
-                self.sg_graph.TKCanvas,
-                zoom,
-                self.size,
-                offset,
-                )
-
-    def set_view(self, zoom, offset, angle=0):
-        self.draw_options.zoom = zoom
-        self.draw_options.offset = offset
-        self.draw_options.angle = angle
-
-    def render(self, item, draw_method):
-        draw_method(item, self.draw_options)
-
-    def clear(self):
-        self.draw_options.clear()
 
 
 def draw_distance_sensor(ds, draw_options):
@@ -144,7 +139,8 @@ def draw_test_circle(circle, draw_options):
     tk_draw_circle(canvas, pos, rad, fill="#63ff92", width=1)
 
 
-def draw_field(field, draw_options):
-    draw_car(field.car, draw_options)
-    draw_walls(field.walls, draw_options)
-    draw_checkpoints(field.checkpoints, draw_options)
+def draw_field(field, viewport):
+    viewport.clear()
+    viewport.render(field["car"])
+    viewport.render(field["walls"])
+    viewport.render(field["checkpoints"])
